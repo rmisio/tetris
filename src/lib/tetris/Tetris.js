@@ -44,15 +44,16 @@ class Tetris {
       initialState: {
         color: 'yellow',
         shape: [
-          [0, 0, 1, 0, 0],
-          [0, 0, 1, 0, 0],
-          [0, 0, 1, 0, 0],
-          [0, 0, 1, 0, 0],
+          [0, 1, 0, 0],
+          [0, 1, 0, 0],
+          [0, 1, 0, 0],
+          [0, 1, 0, 0],
         ],        
       }
     });
     this.piece2.el.style.position = 'absolute';
     this.piece2.el.style.left = `${this.piece1.width - this.piece2.coords.x + 15}px`;
+    this.piece2.el.style.top = `${this.piece1.height - this.piece2.coords.y + 15}px`;
     container.appendChild(this.piece2.el);
 
     this.piece3 = new Piece({
@@ -69,14 +70,11 @@ class Tetris {
     });
     this.piece3.el.style.position = 'absolute';
     this.piece3.el.style.left = `${this.piece1.width + 15 + this.piece2.width + 15 - this.piece3.coords.x}px`;
+    this.piece3.el.style.top = `${this.piece1.height + 15 + this.piece2.height + 15 - this.piece3.coords.y}px`;
     container.appendChild(this.piece3.el);
 
-    console.log('troy sizzle');
-    window.troy = this.piece2;
-    window.sizzle = this.piece3;
-
-    document.addEventListener('keydown', this.onKeyDown, false);
-    document.addEventListener('keyup', this.onKeyUp, false);
+    document.addEventListener('keydown', this.onKeyDown.bind(this), false);
+    document.addEventListener('keyup', this.onKeyUp.bind(this), false);
 
     el.appendChild(container);
 
@@ -105,10 +103,12 @@ class Tetris {
 
   onKeyDown(e) {
     if (
-      [37, 39, 40].includes(e.keyCode) &&
-      this._state.started &&
-      this._state.activePiece) {
-
+      [37, 39, 40].includes(e.keyCode)) {      
+      // [37, 39, 40].includes(e.keyCode) &&
+      // this._state.started &&
+      // this._state.activePiece) {
+      this.rotatePiece(this.piece2);
+      e.preventDefault();
     }
   }
 
@@ -125,6 +125,21 @@ class Tetris {
   destroy() {
     document.removeEventListener('keydown', this.onKeyDown, false);
     document.removeEventListener('keyup', this.onKeyUp, false);    
+  }
+
+  // https://stackoverflow.com/a/42581396
+  rotatePiece(piece) {
+    const result = [];
+    const shape = piece.getState().shape;
+
+    shape.forEach(function (a, i, aa) {
+      a.forEach(function (b, j, bb) {
+        result[j] = result[j] || [];
+        result[j][aa.length - i - 1] = b;
+      });
+    });
+
+    piece.setState({ shape: result });
   }
 }
 

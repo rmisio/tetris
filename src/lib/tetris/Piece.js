@@ -1,5 +1,4 @@
 import { memoize } from 'lodash';
-import { empty } from 'util/dom';
 import BaseVw from './BaseVw';
 import Block from './Block';
 
@@ -60,6 +59,7 @@ class Piece extends BaseVw {
 
     const container = this._el = document.createElement('div');
     container.style.position = 'relative';
+    container.style.backgroundColor = '#FFF';
     this._blocks = [];
     this.render();
   }
@@ -80,18 +80,6 @@ class Piece extends BaseVw {
   get el() {
     return this._el;
   }  
-
-  // https://stackoverflow.com/a/42581396
-  rotate() {
-    const result = [];
-    // array.forEach(function (a, i, aa) {
-    //     a.forEach(function (b, j, bb) {
-    //         result[j] = result[j] || [];
-    //         result[j][aa.length - i - 1] = b;
-    //     });
-    // });
-    return result;
-  }
 
   /*
    * Returns functional width, meaning the distance from the start of
@@ -125,7 +113,6 @@ class Piece extends BaseVw {
   render() {
     const state = this.getState();
 
-    empty(this._el);
     let shape = state.shape;
     shape = Array.isArray(shape) ? shape : [];
 
@@ -134,6 +121,8 @@ class Piece extends BaseVw {
     shape.forEach((row, rowIndex) => {
       row.forEach((cell, cellIndex) => {
         if (!cell) return;
+
+        console.log('gotta cell to render');
 
         let block = this._blocks[blockIndex];
 
@@ -149,6 +138,9 @@ class Piece extends BaseVw {
         blockIndex++;
       });
     });
+
+    this._el.style.width = `${shape[0].length * state.blockWidth}px`;
+    this._el.style.height = `${shape.length * state.blockHeight}px`;
   }
 }
 
