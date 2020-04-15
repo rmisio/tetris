@@ -46,9 +46,13 @@ class BaseVw {
       };
     }
 
-    if (!isEqual(this._state, newState)) {
+    if (opts.renderOnChange) {
+      if (!isEqual(this._state, newState)) {
+        this._state = newState;
+        this.render();
+      }
+    } else {
       this._state = newState;
-      if (opts.renderOnChange && this.render) this.render();
     }
 
     return this;

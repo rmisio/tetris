@@ -2,6 +2,64 @@ import { memoize } from 'lodash';
 import BaseVw from './BaseVw';
 import Block from './Block';
 
+/*
+ * !! Be sure to treat the shape array as immutable otherwise the momoization
+ * could return old results.
+ */
+const memoizedMeta = memoize(
+  (shape, blockWidth, blockHeight) => {
+    if (!Array.isArray(shape)) {
+      throw new Error('The shape must be provided as an array.');
+    }
+
+    let firstColWithCell;
+    let lastColWithCell;        
+    let firstRowWithCell;
+    let lastRowWithCell;
+
+    shape.forEach((row, rowIndex) => {
+      row.forEach((cell, cellIndex) => {
+        firstRowWithCell = !!cell && firstRowWithCell === undefined ?
+          rowIndex : firstRowWithCell;
+        lastRowWithCell = !!cell ?
+          rowIndex : lastRowWithCell;
+        firstColWithCell = !!cell &&
+          (
+            cellIndex < firstColWithCell ||
+            firstColWithCell === undefined
+          ) ?
+          cellIndex : firstColWithCell;
+        lastColWithCell = !!cell &&
+          (
+            cellIndex > lastColWithCell ||
+            lastColWithCell === undefined                
+          ) ?
+          cellIndex : lastColWithCell;              
+      });
+    });
+
+    // width and height include spacer blocks. fWidth and fHeight are
+    // "functional" width and heights and don't include the spacer blocks.
+    // For example, the fWidth would be the distance from the start of
+    // the furthest left bock to the end of the furthest right one.
+    const fWidth = (lastColWithCell - firstColWithCell + 1) * blockWidth;
+    const fHeight = (lastRowWithCell - firstRowWithCell + 1) * blockHeight;
+    const leftEdge = firstColWithCell * blockWidth;
+    const topEdge = firstRowWithCell * blockHeight;
+
+    return {
+      width: (shape[0] || 0) * blockWidth,
+      height: shape.length * blockHeight,
+      fWidth,
+      fHeight,
+      leftEdge,
+      rightEdge: leftEdge + fWidth,
+      topEdge,
+      botEdge: topEdge + fHeight,
+    }
+  }
+);
+
 class Piece extends BaseVw {
   constructor(options = {}) {
     const shape = options.initialState && options.initialState.shape;
@@ -20,55 +78,24 @@ class Piece extends BaseVw {
       },
     });
 
-    this._memoizedMeta = memoize(
-      (shape, blockWidth, blockHeight) => {
-        let firstColWithCell;
-        let lastColWithCell;        
-        let firstRowWithCell;
-        let lastRowWithCell;
-
-        shape.forEach((row, rowIndex) => {
-          row.forEach((cell, cellIndex) => {
-            firstRowWithCell = !!cell && firstRowWithCell === undefined ?
-              rowIndex : firstRowWithCell;
-            lastRowWithCell = !!cell ?
-              rowIndex : lastRowWithCell;
-            firstColWithCell = !!cell &&
-              (
-                cellIndex < firstColWithCell ||
-                firstColWithCell === undefined
-              ) ?
-              cellIndex : firstColWithCell;
-            lastColWithCell = !!cell &&
-              (
-                cellIndex > lastColWithCell ||
-                lastColWithCell === undefined                
-              ) ?
-              cellIndex : lastColWithCell;              
-          });
-        });
-
-        const width = (lastColWithCell - firstColWithCell + 1) * blockWidth;
-        const height = (lastRowWithCell - firstRowWithCell + 1) * blockHeight;
-        const leftEdge = firstColWithCell * blockWidth;
-        const topEdge = firstRowWithCell * blockHeight;
-
-        return {
-          width,
-          height,
-          leftEdge,
-          rightEdge: leftEdge + width,
-          topEdge,
-          botEdge: topEdge + height,
-        }
-      }
-    );
-
     const container = this._el = document.createElement('div');
     container.style.position = 'relative';
     // container.style.backgroundColor = '#FFF';
     this._blocks = [];
     this.render();
+  }
+
+  static getMeta(shape, blockWidth, blockHeight) {
+    return memoizedMeta(shape, blockWidth, blockHeight);
+  }
+
+  get meta() {
+    const {
+      shape,
+      blockWidth,
+      blockHeight,
+    } = this.getState();
+    return memoizedMeta(shape, blockWidth, blockHeight);
   }
 
   setState(state={}, options) {
@@ -86,49 +113,6 @@ class Piece extends BaseVw {
 
   get el() {
     return this._el;
-  }  
-
-  /*
-   * Returns functional width, meaning the distance from the start of
-   * the furthest left bock to the end of the furthest right one.
-   */
-  get width() {
-    const state = this.getState();
-    const { width } = this._memoizedMeta(state.shape, state.blockWidth, state.blockHeight);
-    return width;
-  }
-
-  /*
-   * Returns functional height, meaning the distance from the top of
-   * the top-most bock to the bottom of the bottom-most bock.
-   */
-  get height() {
-    const state = this.getState();
-    const { height } = this._memoizedMeta(state.shape, state.blockWidth, state.blockHeight);
-    return height;
-  }
-
-  /*
-   * Returns the fucntional boundaries of the piece. I.E. leftEdge will
-   * be the x position of the left-most block, rightEdge will the x position
-   * of the right-most block, topEdge will be the y position of the top-most
-   * block and botEdge will the y position of the bottom-most block.
-   */
-  get edges() {
-    const state = this.getState();
-    const {
-      leftEdge,
-      rightEdge,
-      topEdge,
-      botEdge,
-    } = this._memoizedMeta(state.shape, state.blockWidth, state.blockHeight);
-    
-    return {
-      leftEdge,
-      rightEdge,
-      topEdge,
-      botEdge,
-    };
   }
 
   render() {
