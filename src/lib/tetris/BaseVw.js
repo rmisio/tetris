@@ -53,6 +53,14 @@ class BaseVw {
 
     return this;
   }
+
+  destroy() {
+    return this;
+  }
+
+  render() {
+    return this;
+  }
 }
 
 export default BaseVw;

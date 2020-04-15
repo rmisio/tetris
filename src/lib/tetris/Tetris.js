@@ -1,5 +1,65 @@
-import isElement from 'lodash';
+import { isElement } from 'lodash';
+import { randomInt } from 'util/number';
 import Piece from './Piece';
+
+const PIECES = [
+  {
+    shape: [
+      [0, 1, 0, 0],
+      [0, 1, 0, 0],
+      [0, 1, 0, 0],
+      [0, 1, 0, 0],
+    ],
+    rotatable: true,
+  },
+  {
+    shape: [
+      [0, 1, 0],
+      [1, 1, 0],
+      [0, 1, 0],
+    ],
+    rotatable: true,
+  },
+  {
+    shape: [
+      [1, 1, 0],
+      [0, 1, 0],
+      [0, 1, 1],
+    ],
+    rotatable: true,
+  },
+  {
+    shape: [
+      [0, 1, 1],
+      [0, 1, 0],
+      [1, 1, 0],
+    ],
+    rotatable: true,
+  },
+  {
+    shape: [
+      [0, 0, 0],
+      [1, 1, 1],
+      [1, 0, 0],
+    ],
+    rotatable: true,
+  },
+  {
+    shape: [
+      [0, 0, 0],
+      [1, 1, 1],
+      [0, 0, 1],
+    ],
+    rotatable: true,
+  },
+  {
+    shape: [
+      [1, 1],
+      [1, 1],
+    ],
+    rotatable: false,
+  },
+];
 
 class Tetris {
   constructor(el, width = 330) {
@@ -27,66 +87,24 @@ class Tetris {
     container.style.height = `${this._dimensions.height}px`;
     container.style.position = 'relative';
 
-    this.piece1 = new Piece({
-      initialState: {
-        color: 'pink',
-        shape: [
-          [0, 1, 0],
-          [1, 1, 0],
-          [0, 1, 0],
-        ],        
-      }
-    });
-    this.piece1.el.style.position = 'absolute';
-    container.appendChild(this.piece1.el);
-
-    this.piece2 = new Piece({
-      initialState: {
-        color: 'yellow',
-        shape: [
-          [0, 1, 0, 0],
-          [0, 1, 0, 0],
-          [0, 1, 0, 0],
-          [0, 1, 0, 0],
-        ],        
-      }
-    });
-    this.piece2.el.style.position = 'absolute';
-    this.piece2.el.style.left = `${this.piece1.width - this.piece2.coords.x + 15}px`;
-    this.piece2.el.style.top = `${this.piece1.height - this.piece2.coords.y + 15}px`;
-    container.appendChild(this.piece2.el);
-
-    this.piece3 = new Piece({
-      initialState: {
-        color: 'orange',
-        shape: [
-          [0, 0, 1, 1, 0],
-          [0, 0, 1, 0, 0],
-          [0, 0, 1, 1, 1],
-          [0, 0, 1, 0, 0],
-          [0, 1, 1, 0, 0],
-        ],        
-      }
-    });
-    this.piece3.el.style.position = 'absolute';
-    this.piece3.el.style.left = `${this.piece1.width + 15 + this.piece2.width + 15 - this.piece3.coords.x}px`;
-    this.piece3.el.style.top = `${this.piece1.height + 15 + this.piece2.height + 15 - this.piece3.coords.y}px`;
-    container.appendChild(this.piece3.el);
-
     document.addEventListener('keydown', this.onKeyDown.bind(this), false);
-    document.addEventListener('keyup', this.onKeyUp.bind(this), false);
 
     el.appendChild(container);
 
     this._state = {
       started: false,
-      // activePiece: null,
-      activePiece: this.longPiece,
+      activePiece: null,
       blocks: [],
       lineCount: 0,
       points: 0,
       gameOver: false,
+      level: 1,
+      speedFactor: 10,
+      keyMoveIncrement: 10,
+      dropMoveIncrement: 20,
     };
+
+    this.start();
   }
 
   static get ASPECT_RATIO () {
@@ -103,28 +121,69 @@ class Tetris {
 
   onKeyDown(e) {
     if (
-      [37, 39, 40].includes(e.keyCode)) {      
-      // [37, 39, 40].includes(e.keyCode) &&
-      // this._state.started &&
-      // this._state.activePiece) {
-      this.rotatePiece(this.piece2);
-      e.preventDefault();
+      !(
+        e.keyCode >= 37 &&
+        e.keyCode <= 40 &&
+        this._state.started &&
+        this._state.activePiece
+      )
+    ) {
+      return;
     }
-  }
 
-  onKeyUp(e) {
-    
+    e.preventDefault();
+
+    requestAnimationFrame(() => {
+      let piece = this._state.activePiece;
+
+      if (piece) {
+        const { keyMoveIncrement, dropMoveIncrement } = this._state;
+        piece = piece.instance;
+
+        if (e.keyCode === 37) {
+          let newLeft =
+            parseInt(piece.el.style.left) - keyMoveIncrement || 0;
+          newLeft = newLeft < piece.edges.leftEdge * -1 ? piece.edges.leftEdge * -1 : newLeft;
+          piece.el.style.left = `${newLeft}px`;
+        } else if (e.keyCode === 39) {
+          let newLeft =
+            parseInt(piece.el.style.left) + keyMoveIncrement || 0;
+          const maxLeft = this.dimensions.width - (piece.edges.leftEdge  + piece.width);
+          newLeft = newLeft > maxLeft ? maxLeft : newLeft;
+          piece.el.style.left = `${newLeft}px`;
+        } else if (e.keyCode === 40) {
+          const newTop =
+            parseInt(piece.el.style.top) + dropMoveIncrement || 0;
+          // piece.el.style.right = `${newRight < this.dimensions.width ? 0 : newRight}px`;
+          piece.el.style.top = `${newTop}px`;
+        } else {
+          // up key, let's try and rotate
+          this.rotatePiece(piece);
+        }
+      }
+    });
   }
 
   start() {
-    if (!this._state.started && ! this._state.gameOver) {
+    const {
+      started,
+      gameOver,
+      activePiece,
+    } = this._state;
+
+    if (!started && !gameOver) {
       this._state.started = true;
+
+      if (!activePiece) {
+        this.dropNewPiece();
+      } else {
+        // resume auto drop of already active piece
+      }
     }
   }
 
   destroy() {
     document.removeEventListener('keydown', this.onKeyDown, false);
-    document.removeEventListener('keyup', this.onKeyUp, false);    
   }
 
   // https://stackoverflow.com/a/42581396
@@ -140,6 +199,31 @@ class Tetris {
     });
 
     piece.setState({ shape: result });
+  }
+
+  dropNewPiece() {
+    const { activePiece } = this._state;
+
+    if (activePiece) {
+      this._el.removeChild(activePiece.instance);
+      activePiece.instance = null;
+    }
+
+    // const newPiece = PIECES[randomInt(0, PIECES.length - 1)];
+    const newPiece = PIECES[0];
+    const instance = newPiece.instance = new Piece({
+      initialState: {
+        shape: newPiece.shape,
+      },
+    });
+
+    instance.el.style.position = 'absolute';
+    instance.el.style.left =
+      `${Math.floor((this.dimensions.width - instance.width - instance.edges.leftEdge) / 2)}px`;
+    instance.el.style.top =
+      `${Math.floor((instance.height / 2) * -1)}px`;
+    this._el.appendChild(instance.el);
+    this._state.activePiece = newPiece;
   }
 }
 

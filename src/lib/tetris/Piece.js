@@ -48,18 +48,25 @@ class Piece extends BaseVw {
           });
         });
 
+        const width = (lastColWithCell - firstColWithCell + 1) * blockWidth;
+        const height = (lastRowWithCell - firstRowWithCell + 1) * blockHeight;
+        const leftEdge = firstColWithCell * blockWidth;
+        const topEdge = firstRowWithCell * blockHeight;
+
         return {
-          width: (lastColWithCell - firstColWithCell + 1) * blockWidth,
-          height: (lastRowWithCell - firstRowWithCell + 1) * blockHeight,
-          x: firstColWithCell * blockWidth,
-          y: firstRowWithCell * blockHeight,
+          width,
+          height,
+          leftEdge,
+          rightEdge: leftEdge + width,
+          topEdge,
+          botEdge: topEdge + height,
         }
       }
     );
 
     const container = this._el = document.createElement('div');
     container.style.position = 'relative';
-    container.style.backgroundColor = '#FFF';
+    // container.style.backgroundColor = '#FFF';
     this._blocks = [];
     this.render();
   }
@@ -102,12 +109,26 @@ class Piece extends BaseVw {
   }
 
   /*
-   * Returns the x and y position of the top-most and left-most block.
+   * Returns the fucntional boundaries of the piece. I.E. leftEdge will
+   * be the x position of the left-most block, rightEdge will the x position
+   * of the right-most block, topEdge will be the y position of the top-most
+   * block and botEdge will the y position of the bottom-most block.
    */
-  get coords() {
+  get edges() {
     const state = this.getState();
-    const { x, y } = this._memoizedMeta(state.shape, state.blockWidth, state.blockHeight);
-    return { x, y };
+    const {
+      leftEdge,
+      rightEdge,
+      topEdge,
+      botEdge,
+    } = this._memoizedMeta(state.shape, state.blockWidth, state.blockHeight);
+    
+    return {
+      leftEdge,
+      rightEdge,
+      topEdge,
+      botEdge,
+    };
   }
 
   render() {
@@ -121,8 +142,6 @@ class Piece extends BaseVw {
     shape.forEach((row, rowIndex) => {
       row.forEach((cell, cellIndex) => {
         if (!cell) return;
-
-        console.log('gotta cell to render');
 
         let block = this._blocks[blockIndex];
 
@@ -139,8 +158,8 @@ class Piece extends BaseVw {
       });
     });
 
-    this._el.style.width = `${shape[0].length * state.blockWidth}px`;
-    this._el.style.height = `${shape.length * state.blockHeight}px`;
+    // this._el.style.width = `${shape[0].length * state.blockWidth}px`;
+    // this._el.style.height = `${shape.length * state.blockHeight}px`;
   }
 }
 
