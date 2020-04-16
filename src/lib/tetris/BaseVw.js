@@ -1,3 +1,5 @@
+// todo: test the shallowobj compare functionality
+
 import { shallowEqualObjects } from 'util/object';
 
 class BaseVw {

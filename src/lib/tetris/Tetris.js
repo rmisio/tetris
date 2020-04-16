@@ -132,9 +132,9 @@ class Tetris {
         [null, null, null, null, null, null, null, null, null, null],
         [null, null, null, null, null, null, null, null, null, null],
         [null, null, null, null, null, null, null, null, null, null],
-        [null, null, null, null, null, null, null, null, null, null],
-        [null, null, null, null, null, null, null, null, null, null],
-        [null, null, null, null, null, null, null, null, null, null],
+        [null, { color: 'yellow', size: blockWidth }, null, null, null, null, null, null, null, null],
+        [null, { color: 'yellow', size: blockWidth }, null, null, null, null, null, null, null, null],
+        [null, { color: 'yellow', size: blockWidth }, null, null, null, null, null, null, null, null],
         [null, { color: 'yellow', size: blockWidth }, null, null, null, null, null, null, null, null],
         [
           { color: 'yellow', size: blockWidth },
@@ -180,6 +180,39 @@ class Tetris {
     return this._dimensions;
   }
 
+  // todo: memoize me
+  // would need blocks passed in.
+  willFit(pieceMeta, shape, pos) {
+    // check if we are within game boundaries
+    if (
+      pos[0] < pieceMeta.leftEdge * -1 ||
+      pos[0] > this._state.cols - pieceMeta.rightEdge ||
+      pos[1] > this._state.rows - pieceMeta.botEdge
+    ) {
+      return false;
+    }
+
+    let foundOverlap = false;
+
+    // ensure we dont overlap with any existing blocks
+    // (brute forcing here... perhaps there's a better way?)
+    for (let i=0; i < shape.length; i++) {
+      for (let j=0; j < shape[i].length; j++) {
+        if (
+          shape[i][j] &&
+          this._state.blocks[pos[1] + i][pos[0] + j]
+        ) {
+          foundOverlap = true;
+          break;
+        }
+      }
+
+      if (foundOverlap) break;
+    }
+
+    return !foundOverlap;
+  }
+
   onKeyDown(e) {
     if (
       !(
@@ -198,55 +231,67 @@ class Tetris {
       let piece = this._state.activePiece;
 
       if (piece) {
-        const { blockWidth, blockHeight } = this._state;
         piece = piece.instance;
-        const {
-          leftEdge,
-          fWidth
-        } = piece.meta;
+        const curPos = this.activePieceContainer.getState().position;
 
-        if (e.keyCode === 37) {
-          // left
-          let newLeft =
-            (parseInt(piece.el.style.left) || 0) - blockWidth || 0;
-          newLeft = newLeft < leftEdge * -1 ? leftEdge * -1 : newLeft;
-          piece.el.style.left = `${newLeft}px`;
-        } else if (e.keyCode === 39) {
-          // right
-          let newLeft =
-            (parseInt(piece.el.style.left) || 0) + blockWidth || 0;
-          const maxLeft = this.dimensions.width - (leftEdge  + fWidth);
-          newLeft = newLeft > maxLeft ? maxLeft : newLeft;
-          piece.el.style.left = `${newLeft}px`;
-        } else if (e.keyCode === 40) {
-          // down
-          const newTop =
-            (parseInt(piece.el.style.top) || 0) + blockHeight || 0;
-          piece.el.style.top = `${newTop}px`;
-        } else {
-          // Up key, let's try and rotate. If the rotation would cause the piece to
-          // exceed the game boundaries or overlap another block, we'll try and adjust
-          // the position to compensate.
-          const {
-            shape,
-            blockHeight,
-            blockWidth,
-          } = piece.getState();
-          
-          const curX = parseInt(piece.el.style.left) || 0;
-          const curY = parseInt(piece.el.style.top) || 0;
+        if ([37, 39, 40].includes(e.keyCode)) {
+          let newPos;
 
-          const {
-            leftEdge,
-            fWidth,
-          } = Piece.getMeta(Tetris.rotateMatrix(shape), blockWidth, blockHeight);
-
-          Tetris.rotatePiece(piece);
-
-          if (curX + leftEdge + fWidth > this.dimensions.width) {
-            // over the right edge
+          if (e.keyCode === 37) {
+            newPos = [curPos[0] - 1, curPos[1]];
+          } else if (e.keyCode === 39) {
+            newPos = [curPos[0] + 1, curPos[1]];
           } else {
-            console.log('you good big billz');
+            // down
+            newPos = [curPos[0], curPos[1] + 1];
+          }
+
+          if (this.willFit(piece.meta, piece.getState().shape, newPos)) {
+            this.activePieceContainer.setState({ position: newPos });
+          }
+        } else {
+          // up key, let's rotate
+          const rotatedShape = Tetris.rotateMatrix(piece.getState().shape);
+          const pieceMeta = Piece.getMeta(
+            rotatedShape,
+            this._state.blockWidth,
+            this._state.blockHeight,
+          );
+          
+          // todo: switch to blockSize
+          if (this.willFit(pieceMeta, rotatedShape, curPos)) {
+            piece.setState({ shape: rotatedShape });
+          } else {
+            // we'll try and move up to 2 blocks in different directions
+            // to see if the rotate piece will fit
+            // TODO: I suspect there's a more efficient way to get an idea
+            // of which direction might fit rather than blindly trying them
+            // all.
+
+            const adjustments = [
+              [-1,  0],   // one spot left
+              [1, 0],     // one spot right
+              [0, -1],    // one spot up
+              [0, 1],     // etc...
+              [-2,  0],   // one spot left
+              [2, 0],     // one spot right
+              [0, -2],    // one spot up
+              [0, 2],     // etc...
+            ];
+
+            for (let i = 0; i < adjustments.length; i++) {
+              const adjustedP = [
+                curPos[0] + adjustments[i][0],
+                curPos[1] + adjustments[i][1]
+              ]
+
+              // todo: switch to blockSize
+              if (this.willFit(pieceMeta, rotatedShape, adjustedP)) {
+                this.activePieceContainer.setState({ position: adjustedP });
+                piece.setState({ shape: rotatedShape });
+                break;
+              }
+            }
           }
         }
       }
@@ -311,18 +356,6 @@ class Tetris {
         blockWidth,
       },
     });
-
-    // const {
-    //   leftEdge,
-    //   fWidth,
-    //   fHeight,
-    // } = instance.meta;
-
-    // instance.el.style.position = 'absolute';
-    // instance.el.style.left =
-    //   `${Math.floor(((this.dimensions.width - fWidth) / 2) - leftEdge)}px`;
-    // instance.el.style.top =
-    //   `${Math.floor((fHeight / 2) * -1)}px`;
 
     if (!this.activePieceContainer) {
       const {

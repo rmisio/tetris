@@ -65,17 +65,17 @@ class PieceBoard extends BaseVw {
         Array.isArray(state.position) &&
         state.position.length === 2 &&
         Number.isInteger(state.position[0]) &&
-        state.position[0] >= 0 &&
-        state.position[0] <= newState.width &&
+        Math.abs(state.position[0]) <= newState.cols &&
         Number.isInteger(state.position[1]) &&
-        state.position[1] >= 0 &&
-        state.position[1] <= newState.height
+        Math.abs(state.position[1]) <= newState.rows
       )
     ) {
       // TODO: break up this if for a less ambiguous error messages.
-      throw new Error('The position must be a 2 item array, both of which are integers > 0.' +
-        'The first integer must be less than or equal to the width. The second must be ' +
-        'less than or equal to the height.');
+      // clean up!
+      // test this error;
+      throw new Error('The position must be a 2 item array, both of which are integers.' +
+        'The first integer must be less than or equal to the absolute width. The second must be ' +
+        'less than or equal to the absolute height.');
     }
 
     return super.setState(state, options);

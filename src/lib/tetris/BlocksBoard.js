@@ -21,7 +21,6 @@ class BlocksBoard extends BaseVw {
     } = this.getState();
 
     this._el = document.createElement('div');
-    this._el.id = 'PICKLE_FACE';
     this._el.style.width = `${blockSize * cols}px`;
     this._el.style.height = `${blockSize * rows}px`;
   }
@@ -63,8 +62,6 @@ class BlocksBoard extends BaseVw {
       blockSize,
     } = this.getState();
 
-    console.dir(this.getState());
-
     empty(this._el);
 
     (blocks || []).forEach((row, rowIndex) => {
@@ -74,7 +71,7 @@ class BlocksBoard extends BaseVw {
       }
 
       row.forEach((cell, cellIndex) => {
-        if (typeof cell === 'object') {
+        if (cell && typeof cell === 'object') {
           let block;
 
           try {

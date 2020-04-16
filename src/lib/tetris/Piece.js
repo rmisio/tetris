@@ -42,14 +42,20 @@ const memoizedMeta = memoize(
     // "functional" width and heights and don't include the spacer blocks.
     // For example, the fWidth would be the distance from the start of
     // the furthest left bock to the end of the furthest right one.
-    const fWidth = (lastColWithCell - firstColWithCell + 1) * blockWidth;
-    const fHeight = (lastRowWithCell - firstRowWithCell + 1) * blockHeight;
-    const leftEdge = firstColWithCell * blockWidth;
-    const topEdge = firstRowWithCell * blockHeight;
 
+    // TODO: is that ^^^ valid still?
+
+
+    const fWidth = lastColWithCell - firstColWithCell + 1;
+    const fHeight = lastRowWithCell - firstRowWithCell + 1;
+    const leftEdge = firstColWithCell;
+    const topEdge = firstRowWithCell;
+
+    // todo: explain how the units here is "cells"
+    // explain how edges are "functional" edges
     return {
-      width: (shape[0] || 0) * blockWidth,
-      height: shape.length * blockHeight,
+      width: (shape[0] && shape[0].length) || 0,
+      height: shape.length,
       fWidth,
       fHeight,
       leftEdge,
