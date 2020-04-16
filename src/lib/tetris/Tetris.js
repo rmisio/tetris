@@ -26,16 +26,16 @@ const PIECES = [
   },
   {
     shape: [
+      [0, 0, 0],
       [1, 1, 0],
-      [0, 1, 0],
       [0, 1, 1],
     ],
     rotatable: true,
   },
   {
     shape: [
+      [0, 0, 0],
       [0, 1, 1],
-      [0, 1, 0],
       [1, 1, 0],
     ],
     rotatable: true,
@@ -64,6 +64,8 @@ const PIECES = [
     rotatable: false,
   },
 ];
+
+// TODO: take into account rotatable property.
 
 const memoizedRotateMatrix = memoize(matrix => {
   const result = [];
@@ -200,6 +202,7 @@ class Tetris {
       for (let j=0; j < shape[i].length; j++) {
         if (
           shape[i][j] &&
+          this._state.blocks[pos[1] + i] &&
           this._state.blocks[pos[1] + i][pos[0] + j]
         ) {
           foundOverlap = true;
@@ -342,13 +345,12 @@ class Tetris {
     } = this._state;
 
     if (activePiece) {
-      // TOdO: nullify the piece in the state of the container board
+      // TODO: nullify the piece in the state of the container board
       this._el.removeChild(activePiece.instance);
       activePiece.instance = null;
     }
 
-    // const newPiece = PIECES[randomInt(0, PIECES.length - 1)];
-    const newPiece = PIECES[0];
+    const newPiece = PIECES[randomInt(0, PIECES.length - 1)];
     const instance = newPiece.instance = new Piece({
       initialState: {
         shape: newPiece.shape,
@@ -363,12 +365,22 @@ class Tetris {
         cols,
         blockWidth,
       } = this._state;
+      const {
+        fWidth,
+        fHeight,
+        leftEdge,
+        topEdge,
+      } = instance.meta;
 
       this.activePieceContainer = new ActivePieceBoard({
         initialState: {
           width: cols,
           height: rows,
           blockSize: blockWidth,
+          position: [
+            Math.floor((this._state.cols - fWidth) / 2) - leftEdge,
+            (Math.floor(fHeight / 2)  + topEdge) * -1
+          ],
         },
       }).render();
 
