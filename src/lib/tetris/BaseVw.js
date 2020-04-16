@@ -1,4 +1,4 @@
-import { isEqual } from 'lodash';
+import { shallowEqualObjects } from 'util/object';
 
 class BaseVw {
   constructor(options = {}) {
@@ -20,7 +20,9 @@ class BaseVw {
    * @param {object} options
    * @param {boolean} [options.renderOnChange = true] - If true, will re-render the view
    *   if the resulting state changes. Setting this to false should be done very judiciously
-   *   since it will result in your view not being in sync with its state.
+   *   since it will result in your view not being in sync with its state. Please note that
+   *   the comparison of the object is done as a shallow compare, so treat the children as
+   *   immutable.
    * @param {boolean} [options.replace = false] - If true, will replace the entire state
    *   with the given state. Otherwise, the given state will be merged in.
    * @return {object} This instance.
@@ -31,6 +33,7 @@ class BaseVw {
       replace: false,
       ...options,
     };
+    const oldState = this._state;
     let newState;
 
     if (typeof state !== 'object') {
@@ -41,18 +44,17 @@ class BaseVw {
       this._state = {};
     } else {
       newState = {
-        ...this._state,
+        ...oldState,
         ...state,
       };
     }
 
+    this._state = newState;
+
     if (opts.renderOnChange) {
-      if (!isEqual(this._state, newState)) {
-        this._state = newState;
+      if (!shallowEqualObjects(oldState, newState)) {
         this.render();
       }
-    } else {
-      this._state = newState;
     }
 
     return this;

@@ -1,8 +1,3 @@
-// TODO rename to PieceBoard...?
-// switch to rows and cols instead of w & h
-
-
-
 import { empty } from 'util/dom';
 import BaseVw from './BaseVw';
 import Piece from './Piece';
@@ -11,21 +6,24 @@ class PieceBoard extends BaseVw {
   constructor(options) {
     super({
       initialState: {
-        width: 10,
-        height: 18,
+        rows: 18,
+        cols: 10,
+        blockSize: 30,
         position: [0, 0],
+        ...options.initialState,
       }
     });
 
     const {
-      width,
-      height,
+      rows,
+      cols,
       blockSize,
     } = this.getState();
 
+    // Todo: maybe make a Board parent class?
     this._el = document.createElement('div');
-    this._el.style.width = `${blockSize * width}px`;
-    this._el.style.height = `${blockSize * height}px`;
+    this._el.style.width = `${blockSize * cols}px`;
+    this._el.style.height = `${blockSize * rows}px`;
   }
 
   get el() {
@@ -40,13 +38,13 @@ class PieceBoard extends BaseVw {
         dim > 0
       )
     ) {
-      throw new Error(`The ${name } must be provided as an integer > 0.`);
+      throw new Error(`The ${name} must be provided as an integer > 0.`);
     }    
   }
 
   setState(state={}, options) {
-    this._checkDim(state.width);
-    this._checkDim(state.height);
+    this._checkDim(state.rows);
+    this._checkDim(state.cols);
     this._checkDim(state.blockSize);
 
     if (
@@ -80,7 +78,6 @@ class PieceBoard extends BaseVw {
         'less than or equal to the height.');
     }
 
-    console.dir(state);
     return super.setState(state, options);
   }
 
@@ -91,15 +88,9 @@ class PieceBoard extends BaseVw {
       position,
     } = this.getState();
 
-    console.dir(this.getState());
-
     empty(this._el);
 
-    console.log('boom');
-    window.boom = piece;
-
     if (piece) {
-      console.log('fat billy');
       piece.el.style.position = 'absolute';
       piece.el.style.left = `${position[0] * blockSize}px`;
       piece.el.style.top = `${position[1] * blockSize}px`;

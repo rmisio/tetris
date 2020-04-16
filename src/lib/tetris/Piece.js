@@ -130,7 +130,8 @@ class Piece extends BaseVw {
         let block = this._blocks[blockIndex];
 
         if (!block) {
-          block = new Block(state.blockWidth, state.blockHeight, state.color);
+          // todo: change to blockSize
+          block = new Block(state.blockWidth, state.color);
           block.el.style.position = 'absolute';
           this._el.appendChild(block.el);
           this._blocks.push(block);

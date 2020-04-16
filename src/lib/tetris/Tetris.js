@@ -1,8 +1,9 @@
-// TODO: blockwidth and blockheight condensed into one
+// TODO: blockwidth and blockheight condensed into one blocksize
 
 import { isElement, memoize } from 'lodash';
 import { randomInt } from 'util/number';
-import ActivePieceBoard from './ActivePieceBoard';
+import ActivePieceBoard from './PieceBoard';
+import BlocksBoard from './BlocksBoard';
 import Piece from './Piece';
 
 const PIECES = [
@@ -118,11 +119,51 @@ class Tetris {
       level: 1,
       blockWidth,
       blockHeight,
-      blocks: [],
+      blocks: [
+        [null, null, null, null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null, null, null, null],
+        [null, { color: 'yellow', size: blockWidth }, null, null, null, null, null, null, null, null],
+        [
+          { color: 'yellow', size: blockWidth },
+          { color: 'yellow', size: blockWidth },
+          { color: 'yellow', size: blockWidth },
+          null,
+          null, null, null, null, null, null
+        ],
+        [
+          { color: 'red', size: blockWidth },
+          { color: 'red', size: blockWidth },
+          { color: 'red', size: blockWidth },
+          { color: 'red', size: blockWidth },
+          null, null, null, null, null, null
+        ],
+      ],
       rows: 18,
       cols: 10,
       activePiecePos: [0, 0],
     };
+
+    
+    this.blocksBoard = new BlocksBoard({
+      initialState: {
+        // todo: pass in rows and cols and blockSize!!!
+        blocks: this._state.blocks,
+      },
+    });
+    this._el.appendChild(this.blocksBoard.render().el);
 
     this.start();
   }
@@ -301,8 +342,6 @@ class Tetris {
       this._el.appendChild(this.activePieceContainer.el);
     }
 
-    console.log('shelly');
-    window.shelly = instance;
     this.activePieceContainer.setState({ piece: instance });
     this._state.activePiece = newPiece;
   }
