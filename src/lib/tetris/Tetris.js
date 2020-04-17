@@ -1,6 +1,7 @@
 // TODO: blockwidth and blockheight condensed into one blocksize
 // TODO: ensure shape is always a square (probably beyond this file)
 // TODO: remove the debugging el IDs
+// TODO: ensure color across app hex
 
 import { isElement, memoize } from 'lodash';
 import { randomInt } from 'util/number';
@@ -136,22 +137,22 @@ class Tetris {
         [null, null, null, null, null, null, null, null, null, null],
         [null, null, null, null, null, null, null, null, null, null],
         [null, null, null, null, null, null, null, null, null, null],
-        [null, { color: 'yellow', size: blockWidth }, null, null, null, null, null, null, null, null],
-        [null, { color: 'yellow', size: blockWidth }, null, null, null, null, null, null, null, null],
-        [null, { color: 'yellow', size: blockWidth }, null, null, null, null, null, null, null, null],
-        [null, { color: 'yellow', size: blockWidth }, null, null, null, null, null, null, null, null],
+        [null, { color: '#42f557', size: blockWidth }, null, null, null, null, null, null, null, null],
+        [null, { color: '#42f557', size: blockWidth }, null, null, null, null, null, null, null, null],
+        [null, { color: '#42f557', size: blockWidth }, null, null, null, null, null, null, null, null],
+        [null, { color: '#42f557', size: blockWidth }, null, null, null, null, null, null, null, null],
         [
-          { color: 'yellow', size: blockWidth },
-          { color: 'yellow', size: blockWidth },
-          { color: 'yellow', size: blockWidth },
+          { color: '#42f557', size: blockWidth },
+          { color: '#42f557', size: blockWidth },
+          { color: '#42f557', size: blockWidth },
           null,
           null, null, null, null, null, null
         ],
         [
-          { color: 'red', size: blockWidth },
-          { color: 'red', size: blockWidth },
-          { color: 'red', size: blockWidth },
-          { color: 'red', size: blockWidth },
+          { color: '#42c8f5', size: blockWidth },
+          { color: '#42c8f5', size: blockWidth },
+          { color: '#42c8f5', size: blockWidth },
+          { color: '#42c8f5', size: blockWidth },
           null, null, null, null, null, null
         ],
       ],
@@ -385,7 +386,6 @@ class Tetris {
       });
 
       this.blocksBoard.setState({ blocks: this._state.blocks }); 
-      // window.moo = this.dropNewPiece.bind(this);
       this.clearActivePiece();
       this.dropNewPiece();
       return;
@@ -412,6 +412,12 @@ class Tetris {
       blockWidth,
     } = this._state;
 
+    const colors = [
+      '#cb42f5',
+      '#f5b342',
+      '#f5427b',
+    ];
+
     this.clearActivePiece();
     const newPiece = PIECES[randomInt(0, PIECES.length - 1)];
     const instance = newPiece.instance = new Piece({
@@ -419,6 +425,7 @@ class Tetris {
         shape: newPiece.shape,
         blockHeight,
         blockWidth,
+        color: colors[0, colors.length - 1],
       },
     });
 

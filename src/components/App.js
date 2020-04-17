@@ -4,7 +4,8 @@ import './App.css';
 
 function App() {
   const gameContainer = useRef(null);
-  const tetrisWidth = 210;
+  // const tetrisWidth = 210;
+  const tetrisWidth = 300;
   let tetris;
 
   useEffect(() => {
