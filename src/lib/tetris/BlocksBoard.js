@@ -21,6 +21,7 @@ class BlocksBoard extends BaseVw {
     } = this.getState();
 
     this._el = document.createElement('div');
+    this._el.id = 'BLOCKS_BOARD';
     this._el.style.width = `${blockSize * cols}px`;
     this._el.style.height = `${blockSize * rows}px`;
   }

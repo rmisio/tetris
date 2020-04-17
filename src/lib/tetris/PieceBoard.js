@@ -22,6 +22,7 @@ class PieceBoard extends BaseVw {
 
     // Todo: maybe make a Board parent class?
     this._el = document.createElement('div');
+    this._el.id = 'PIECE_BOARD';
     this._el.style.width = `${blockSize * cols}px`;
     this._el.style.height = `${blockSize * rows}px`;
   }
@@ -49,9 +50,14 @@ class PieceBoard extends BaseVw {
 
     if (
       state.piece !== undefined &&
-      (!(state.piece instanceof Piece))
+      (
+        !(
+          state.piece instanceof Piece ||
+          state.piece === null
+        )
+      )
     ) {
-      throw new Error('If providing the piece, it must be a Piece instance.');
+      throw new Error('If providing the piece, it must be a Piece instance or null.');
     }
 
     const newState = {

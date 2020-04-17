@@ -1,4 +1,6 @@
 // TODO: blockwidth and blockheight condensed into one blocksize
+// TODO: ensure shape is always a square (probably beyond this file)
+// TODO: remove the debugging el IDs
 
 import { isElement, memoize } from 'lodash';
 import { randomInt } from 'util/number';
@@ -156,15 +158,20 @@ class Tetris {
       rows: 18,
       cols: 10,
       activePiecePos: [0, 0],
+      activePieceDropSpeedFactor: 500,
     };
 
+    const { blocks, rows, cols } = this._state;
     
     this.blocksBoard = new BlocksBoard({
       initialState: {
-        // todo: pass in rows and cols and blockSize!!!
-        blocks: this._state.blocks,
+        blocks,
+        rows,
+        cols,
+        blockSize: this._state.blockWidth,
       },
     });
+    this.blocksBoard._el.style.position = 'absolute';
     this._el.appendChild(this.blocksBoard.render().el);
 
     this.start();
@@ -178,6 +185,7 @@ class Tetris {
     return this._el;
   }
 
+  // TODO: move to state
   get dimensions() {
     return this._dimensions;
   }
@@ -214,6 +222,29 @@ class Tetris {
     }
 
     return !foundOverlap;
+  }
+
+  // TODO: memoize if reasonable
+  // TODO: check args  
+  isGrounded(pieceMeta, shape, pos) {
+    if (pos[1] + pieceMeta.botEdge >= this._state.rows) return true;
+
+    // TODO: this won't be needed if checking args.
+    const shapeArr = Array.isArray(shape) ? shape : [[]];
+    for (let i = 0; i < shapeArr.length; i++) {
+      for (let j = 0; j < shapeArr[i].length; j++) {
+        const cell = shapeArr[i][j];
+        if (
+          cell &&
+          this._state.blocks[pos[1] + i + 1] &&
+          this._state.blocks[pos[1] + i + 1][pos[0] + j]
+        ) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   onKeyDown(e) {
@@ -301,6 +332,132 @@ class Tetris {
     });
   }
 
+  rafProgressPiece() {
+    window.cancelAnimationFrame(this._progressPieceRaf);
+    this._progressPieceRaf =
+      window.requestAnimationFrame(this.progressPiece.bind(this));; 
+  }
+
+  progressPiece(timestamp) {
+    const {
+      started,
+      gameOver,
+      activePiece,
+      level,
+      activePieceDropSpeedFactor,
+    } = this._state;
+
+    if (!started || gameOver || !activePiece) return;
+
+    const piece = activePiece.instance;
+    const { shape, color } = piece.getState();
+    const curPos = this.activePieceContainer.getState().position;
+
+    if (
+      this.isGrounded(
+        piece.meta,
+        piece.getState().shape,
+        this.activePieceContainer.getState().position
+      )
+    ) {
+      this._state.blocks = [...this._state.blocks];
+
+      // check for game over
+
+      // Turn the active piece into individual blocks that we can remove
+      // if/when they become a line.
+      shape.forEach((row, rowIndex) => {
+        row.forEach((col, colIndex) => {
+          if (col) {
+            this._state.blocks[curPos[1] + rowIndex] =
+              this._state.blocks[curPos[1] + rowIndex].map((cell, cellIndex) => {
+                if (cellIndex === curPos[0] + colIndex) {
+                  return {
+                    color,
+                    size: this._state.blockWidth,
+                  }
+                }
+
+                return cell;
+              });
+          }
+        });
+      });
+
+      this.blocksBoard.setState({ blocks: this._state.blocks }); 
+      // window.moo = this.dropNewPiece.bind(this);
+      this.clearActivePiece();
+      this.dropNewPiece();
+      return;
+    }
+
+    this.activePieceContainer.setState({ position: [curPos[0], curPos[1] + 1] });
+
+    window.clearTimeout(this._progressPieceTimeout);
+    this._progressPieceTimeout = window.setTimeout(() => {
+      window.requestAnimationFrame(this.progressPiece.bind(this));
+    }, activePieceDropSpeedFactor - ((level - 1) * 100));
+    // TODO: that will be 0 at a high enouggh level. Prevent it going below 20.    
+  }
+
+  clearActivePiece() {
+    if (this.activePieceContainer) {
+      this.activePieceContainer.setState({ piece: null });
+    }
+  }
+
+  dropNewPiece() {
+    const {
+      blockHeight,
+      blockWidth,
+    } = this._state;
+
+    this.clearActivePiece();
+    const newPiece = PIECES[randomInt(0, PIECES.length - 1)];
+    const instance = newPiece.instance = new Piece({
+      initialState: {
+        shape: newPiece.shape,
+        blockHeight,
+        blockWidth,
+      },
+    });
+
+    if (!this.activePieceContainer) {
+      const {
+        rows,
+        cols,
+        blockWidth,
+      } = this._state;
+
+      this.activePieceContainer = new ActivePieceBoard({
+        initialState: {
+          width: cols,
+          height: rows,
+          blockSize: blockWidth,
+        },
+      }).render();
+      this.activePieceContainer._el.style.position = 'absolute';
+      this._el.appendChild(this.activePieceContainer.el);
+    }
+
+    const {
+      fWidth,
+      fHeight,
+      leftEdge,
+      topEdge,
+    } = instance.meta;    
+
+    this.activePieceContainer.setState({
+      piece: instance,
+      position: [
+        Math.floor((this._state.cols - fWidth) / 2) - leftEdge,
+        (Math.floor(fHeight / 2)  + topEdge) * -1
+      ],
+    });
+    this._state.activePiece = newPiece;
+    this.rafProgressPiece();
+  }
+
   start() {
     const {
       started,
@@ -314,9 +471,15 @@ class Tetris {
       if (!activePiece) {
         this.dropNewPiece();
       } else {
-        // resume auto drop of already active piece
+        this.rafProgressPiece();
       }
     }
+  }
+
+  stop() {
+    this._state.started = false;
+    window.cancelAnimationFrame(this._progressPieceRaf);
+    window.clearTimeout(this._progressPieceTimeout);    
   }
 
   destroy() {
@@ -335,60 +498,6 @@ class Tetris {
 
   static rotatePiece(piece) {
     piece.setState({ shape: Tetris.rotateMatrix(piece.getState().shape) })
-  }
-
-  dropNewPiece() {
-    const {
-      activePiece,
-      blockHeight,
-      blockWidth,
-    } = this._state;
-
-    if (activePiece) {
-      // TODO: nullify the piece in the state of the container board
-      this._el.removeChild(activePiece.instance);
-      activePiece.instance = null;
-    }
-
-    const newPiece = PIECES[randomInt(0, PIECES.length - 1)];
-    const instance = newPiece.instance = new Piece({
-      initialState: {
-        shape: newPiece.shape,
-        blockHeight,
-        blockWidth,
-      },
-    });
-
-    if (!this.activePieceContainer) {
-      const {
-        rows,
-        cols,
-        blockWidth,
-      } = this._state;
-      const {
-        fWidth,
-        fHeight,
-        leftEdge,
-        topEdge,
-      } = instance.meta;
-
-      this.activePieceContainer = new ActivePieceBoard({
-        initialState: {
-          width: cols,
-          height: rows,
-          blockSize: blockWidth,
-          position: [
-            Math.floor((this._state.cols - fWidth) / 2) - leftEdge,
-            (Math.floor(fHeight / 2)  + topEdge) * -1
-          ],
-        },
-      }).render();
-
-      this._el.appendChild(this.activePieceContainer.el);
-    }
-
-    this.activePieceContainer.setState({ piece: instance });
-    this._state.activePiece = newPiece;
   }
 }
 
