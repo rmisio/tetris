@@ -159,7 +159,8 @@ class Tetris {
       rows: 18,
       cols: 10,
       activePiecePos: [0, 0],
-      activePieceDropSpeedFactor: 500,
+      // activePieceDropSpeedFactor: 500,
+      activePieceDropSpeedFactor: 50000000,
     };
 
     const { blocks, rows, cols } = this._state;
@@ -278,7 +279,7 @@ class Tetris {
             newPos = [curPos[0] + 1, curPos[1]];
           } else {
             // down
-            newPos = [curPos[0], curPos[1] + 1];
+            newPos = [curPos[0], curPos[1] + 2];
           }
 
           if (this.willFit(piece.meta, piece.getState().shape, newPos)) {
@@ -350,6 +351,8 @@ class Tetris {
 
     if (!started || gameOver || !activePiece) return;
 
+    // check for game over
+
     const piece = activePiece.instance;
     const { shape, color } = piece.getState();
     const curPos = this.activePieceContainer.getState().position;
@@ -362,8 +365,6 @@ class Tetris {
       )
     ) {
       this._state.blocks = [...this._state.blocks];
-
-      // check for game over
 
       // Turn the active piece into individual blocks that we can remove
       // if/when they become a line.
@@ -385,7 +386,9 @@ class Tetris {
         });
       });
 
-      this.blocksBoard.setState({ blocks: this._state.blocks }); 
+      this.blocksBoard.setState({ blocks: this._state.blocks });
+
+
       this.clearActivePiece();
       this.dropNewPiece();
       return;
