@@ -1,3 +1,5 @@
+// todo: warn that empy cell must be null
+
 import { empty } from 'util/dom';
 import BaseVw from './BaseVw';
 import Block from './Block';
@@ -83,7 +85,7 @@ class BlocksBoard extends BaseVw {
     let resume;
 
     const promise = new Promise((resolve, reject) => {
-      const time = 1500; // this times 4 is the total anim time
+      const time = 100; // this times 4 is the total anim time
       const blinkCount = 2;
       let curBlink =  0;
       let start = null;
@@ -145,6 +147,7 @@ class BlocksBoard extends BaseVw {
             stepOut = true;
             makeAStep();
           } else {
+            console.log('hey ho less resolve');
             resolve();
           }
         }

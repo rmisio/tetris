@@ -159,8 +159,8 @@ class Tetris {
       rows: 18,
       cols: 10,
       activePiecePos: [0, 0],
-      // activePieceDropSpeedFactor: 500,
-      activePieceDropSpeedFactor: 50000000,
+      activePieceDropSpeedFactor: 500,
+      // activePieceDropSpeedFactor: 50000000,
     };
 
     const { blocks, rows, cols } = this._state;
@@ -366,13 +366,18 @@ class Tetris {
     ) {
       this._state.blocks = [...this._state.blocks];
 
+      const lines = [];
+      const rowsLineChecked = [];
+
       // Turn the active piece into individual blocks that we can remove
       // if/when they become a line.
       shape.forEach((row, rowIndex) => {
         row.forEach((col, colIndex) => {
           if (col) {
-            this._state.blocks[curPos[1] + rowIndex] =
-              this._state.blocks[curPos[1] + rowIndex].map((cell, cellIndex) => {
+            const blocksRowIndex = curPos[1] + rowIndex;
+
+            this._state.blocks[blocksRowIndex] =
+              this._state.blocks[blocksRowIndex].map((cell, cellIndex) => {
                 if (cellIndex === curPos[0] + colIndex) {
                   return {
                     color,
@@ -382,12 +387,50 @@ class Tetris {
 
                 return cell;
               });
+
+            
+            if (
+              !rowsLineChecked.includes(blocksRowIndex) &&
+              this._state.blocks[blocksRowIndex].find(block => !block) === undefined
+            ) {
+              rowsLineChecked.push(blocksRowIndex);
+              lines.push(blocksRowIndex);
+            }
           }
         });
       });
 
       this.blocksBoard.setState({ blocks: this._state.blocks });
 
+      if (lines.length) {
+        console.log(lines);
+
+        // todo: pause these filberts on pause;
+        this._lineRemovals = lines.map(lineIndex =>
+          this
+            .blocksBoard
+            .animateRowPreRemoval(lineIndex)
+            .promise
+        );
+        
+        console.log('boom');
+        window.boom = this._lineRemovals;
+        
+        Promise
+          .all(this._lineRemovals)
+          .then(() => {
+            // console.dir(lines.map(line => Array(this._state.cols).fill(null)));
+            // console.dir(this._state.blocks
+            //     .filter((row, rowIndex) => !lines.includes(rowIndex)));
+            this._state.blocks =[
+              ...lines.map(line => Array(this._state.cols).fill(null)),
+              ...this._state.blocks
+                .filter((row, rowIndex) => !lines.includes(rowIndex))
+            ];
+            // console.dir(this._state.blocks);
+            this.blocksBoard.setState({ blocks: this._state.blocks });
+          });
+      }
 
       this.clearActivePiece();
       this.dropNewPiece();
@@ -428,7 +471,7 @@ class Tetris {
         shape: newPiece.shape,
         blockHeight,
         blockWidth,
-        color: colors[0, colors.length - 1],
+        color: colors[randomInt(0, colors.length - 1)],
       },
     });
 
