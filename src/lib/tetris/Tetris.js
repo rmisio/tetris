@@ -3,8 +3,10 @@
 // TODO: remove the debugging el IDs
 // TODO: ensure color across app hex
 
+import Events from 'events';
 import { isElement, memoize } from 'lodash';
 import { randomInt } from 'util/number';
+import BaseVw from './BaseVw.js';
 import ActivePieceBoard from './PieceBoard';
 import BlocksBoard from './BlocksBoard';
 import Piece from './Piece';
@@ -83,94 +85,87 @@ const memoizedRotateMatrix = memoize(matrix => {
   return result;
 });
 
-class Tetris {
-  constructor(el, width = 330) {
+// todo: change el to container.
+class Tetris extends BaseVw {
+  constructor(el, options={}) {
     // todo: switch to rows, cols and blockSize. simple as a pimple dog.
 
     if (!isElement(el)) {
       throw new Error('Please provide a valid dom element.');
     }
 
-    if (typeof width !== 'number' || Number.isNaN(width)) {
-      throw new Error('width must be provided as a non NaN number.');
-    }
-
-    // todo: warn that width should ideally be divisible by 10, or automatically
-    // round...?
-
-    this._dimensions = {
-      width,
-      height: Math.round(width / Tetris.ASPECT_RATIO),
+    const initialState = {
+      cols: 10,
+      rows: 18,
+      blockSize: 30,
+      started: false,
+      gameOver: false,
+      activePiece: null,
+      lines: 0,
+      level: 1,        
+      activePieceDropSpeedFactor: 500,
+      ...options.initialState,      
     };
 
-    const blockWidth = width / 10;
-    const blockHeight = blockWidth;
-    
+    initialState.blocks = [
+      [null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null],
+      [null, { color: '#42f557', size: initialState.blockSize }, null, null, null, null, null, null, null, null],
+      [null, { color: '#42f557', size: initialState.blockSize }, null, null, null, null, null, null, null, null],
+      [null, { color: '#42f557', size: initialState.blockSize }, null, null, null, null, null, null, null, null],
+      [null, { color: '#42f557', size: initialState.blockSize }, null, null, null, null, null, null, null, null],
+      [
+        { color: '#42f557', size: initialState.blockSize },
+        { color: '#42f557', size: initialState.blockSize },
+        { color: '#42f557', size: initialState.blockSize },
+        null,
+        null, null, null, null, null, null
+      ],
+      [
+        { color: '#42c8f5', size: initialState.blockSize },
+        { color: '#42c8f5', size: initialState.blockSize },
+        { color: '#42c8f5', size: initialState.blockSize },
+        { color: '#42c8f5', size: initialState.blockSize },
+        null, null, null, null, null, null
+      ],
+    ];
+
+    super({ initialState });
+
+    Object.assign(this, Events.prototype);
+
+    const {
+      blockSize,
+      rows,
+      cols,
+      blocks,
+    } = this.getState();
+
     const container = this._el = document.createElement('div');
-    container.style.width = `${this._dimensions.width}px`;
-    container.style.height = `${this._dimensions.height}px`;
+    container.style.width = `${blockSize * cols}px`;
+    container.style.height = `${blockSize * rows}px`;
     container.style.position = 'relative';
 
     document.addEventListener('keydown', this.onKeyDown.bind(this), false);
 
     el.appendChild(container);
 
-    this._state = {
-      started: false,
-      activePiece: null,
-      lineCount: 0,
-      points: 0,
-      gameOver: false,
-      level: 1,
-      blockWidth,
-      blockHeight,
-      blocks: [
-        [null, null, null, null, null, null, null, null, null, null],
-        [null, null, null, null, null, null, null, null, null, null],
-        [null, null, null, null, null, null, null, null, null, null],
-        [null, null, null, null, null, null, null, null, null, null],
-        [null, null, null, null, null, null, null, null, null, null],
-        [null, null, null, null, null, null, null, null, null, null],
-        [null, null, null, null, null, null, null, null, null, null],
-        [null, null, null, null, null, null, null, null, null, null],
-        [null, null, null, null, null, null, null, null, null, null],
-        [null, null, null, null, null, null, null, null, null, null],
-        [null, null, null, null, null, null, null, null, null, null],
-        [null, null, null, null, null, null, null, null, null, null],
-        [null, { color: '#42f557', size: blockWidth }, null, null, null, null, null, null, null, null],
-        [null, { color: '#42f557', size: blockWidth }, null, null, null, null, null, null, null, null],
-        [null, { color: '#42f557', size: blockWidth }, null, null, null, null, null, null, null, null],
-        [null, { color: '#42f557', size: blockWidth }, null, null, null, null, null, null, null, null],
-        [
-          { color: '#42f557', size: blockWidth },
-          { color: '#42f557', size: blockWidth },
-          { color: '#42f557', size: blockWidth },
-          null,
-          null, null, null, null, null, null
-        ],
-        [
-          { color: '#42c8f5', size: blockWidth },
-          { color: '#42c8f5', size: blockWidth },
-          { color: '#42c8f5', size: blockWidth },
-          { color: '#42c8f5', size: blockWidth },
-          null, null, null, null, null, null
-        ],
-      ],
-      rows: 18,
-      cols: 10,
-      activePiecePos: [0, 0],
-      activePieceDropSpeedFactor: 500,
-      // activePieceDropSpeedFactor: 50000000,
-    };
-
-    const { blocks, rows, cols } = this._state;
-    
     this.blocksBoard = new BlocksBoard({
       initialState: {
         blocks,
         rows,
         cols,
-        blockSize: this._state.blockWidth,
+        blockSize,
       },
     });
     this.blocksBoard._el.style.position = 'absolute';
@@ -179,27 +174,65 @@ class Tetris {
     this.start();
   }
 
-  static get ASPECT_RATIO () {
-    return 0.555555555555556;
-  }
-
   get el() {
     return this._el;
   }
 
-  // TODO: move to state
-  get dimensions() {
-    return this._dimensions;
+  setState(state = {}, options = {}) {
+    const prevState = this.getState();
+
+    super.setState(state, {
+      ...options,
+      // todo: test me
+      renderOnChange: false,
+    });
+
+    if (options.beingConstructed) return this;
+
+    const {
+      blocks,
+      rows,
+      cols,
+      blockSize,
+      lines,
+      score,
+      level,
+    } = this.getState();
+
+    // funnel state to child components
+
+    if (this.blocksBoard) {
+      this.blocksBoard.setState({
+        blocks, rows, cols, blockSize,
+      });
+    }
+
+    // if necessary, fire change events
+    if (
+      prevState.lines !== lines ||
+      prevState.score !== score ||
+      prevState.level !== level
+    ) {
+      this.emit('updateStats', { lines, score, level });
+    }
+
+    return this;
   }
 
   // todo: memoize me
   // would need blocks passed in.
   willFit(pieceMeta, shape, pos) {
+    const {
+      cols,
+      rows,
+      blocks,
+    } = this.getState();
+
     // check if we are within game boundaries
     if (
       pos[0] < pieceMeta.leftEdge * -1 ||
-      pos[0] > this._state.cols - pieceMeta.rightEdge ||
-      pos[1] > this._state.rows - pieceMeta.botEdge
+      pos[0] > cols - pieceMeta.rightEdge ||
+      pos[1] > rows - pieceMeta.botEdge
     ) {
       return false;
     }
@@ -212,8 +245,8 @@ class Tetris {
       for (let j=0; j < shape[i].length; j++) {
         if (
           shape[i][j] &&
-          this._state.blocks[pos[1] + i] &&
-          this._state.blocks[pos[1] + i][pos[0] + j]
+          blocks[pos[1] + i] &&
+          blocks[pos[1] + i][pos[0] + j]
         ) {
           foundOverlap = true;
           break;
@@ -229,7 +262,12 @@ class Tetris {
   // TODO: memoize if reasonable
   // TODO: check args  
   isGrounded(pieceMeta, shape, pos) {
-    if (pos[1] + pieceMeta.botEdge >= this._state.rows) return true;
+    const {
+      rows,
+      blocks,
+    } = this.getState();
+
+    if (pos[1] + pieceMeta.botEdge >= rows) return true;
 
     // TODO: this won't be needed if checking args.
     const shapeArr = Array.isArray(shape) ? shape : [[]];
@@ -238,8 +276,8 @@ class Tetris {
         const cell = shapeArr[i][j];
         if (
           cell &&
-          this._state.blocks[pos[1] + i + 1] &&
-          this._state.blocks[pos[1] + i + 1][pos[0] + j]
+          blocks[pos[1] + i + 1] &&
+          blocks[pos[1] + i + 1][pos[0] + j]
         ) {
           return true;
         }
@@ -250,12 +288,17 @@ class Tetris {
   }
 
   onKeyDown(e) {
+    const {
+      started,
+      activePiece,
+    } = this.getState();
+
     if (
       !(
         e.keyCode >= 37 &&
         e.keyCode <= 40 &&
-        this._state.started &&
-        this._state.activePiece
+        started &&
+        activePiece
       )
     ) {
       return;
@@ -264,7 +307,7 @@ class Tetris {
     e.preventDefault();
 
     requestAnimationFrame(() => {
-      let piece = this._state.activePiece;
+      let piece = activePiece;
 
       if (piece) {
         piece = piece.instance;
@@ -287,11 +330,11 @@ class Tetris {
           }
         } else {
           // up key, let's rotate
+          const { blockSize } = this.getState();
           const rotatedShape = Tetris.rotateMatrix(piece.getState().shape);
           const pieceMeta = Piece.getMeta(
             rotatedShape,
-            this._state.blockWidth,
-            this._state.blockHeight,
+            blockSize,
           );
           
           // todo: switch to blockSize
@@ -334,20 +377,25 @@ class Tetris {
     });
   }
 
-  rafProgressPiece() {
-    window.cancelAnimationFrame(this._progressPieceRaf);
-    this._progressPieceRaf =
-      window.requestAnimationFrame(this.progressPiece.bind(this));; 
+  // todo: I am memoizable
+  computeScore(lineCount, level) {
+    return (50 * level) + ((lineCount - 1) * 10);
   }
 
-  progressPiece(timestamp) {
+  rafTick() {
+    window.cancelAnimationFrame(this._progressPieceRaf);
+    this._progressPieceRaf =
+      window.requestAnimationFrame(this.tick.bind(this));; 
+  }
+
+  tick(timestamp) {
     const {
       started,
       gameOver,
       activePiece,
       level,
       activePieceDropSpeedFactor,
-    } = this._state;
+    } = this.getState();
 
     if (!started || gameOver || !activePiece) return;
 
@@ -364,24 +412,24 @@ class Tetris {
         this.activePieceContainer.getState().position
       )
     ) {
-      this._state.blocks = [...this._state.blocks];
-
+      const { blockSize, blocks, cols } = this.getState();
       const lines = [];
       const rowsLineChecked = [];
+      let updatedBlocks = [...blocks];
 
       // Turn the active piece into individual blocks that we can remove
-      // if/when they become a line.
+      // if / when they become a line.
       shape.forEach((row, rowIndex) => {
         row.forEach((col, colIndex) => {
           if (col) {
             const blocksRowIndex = curPos[1] + rowIndex;
 
-            this._state.blocks[blocksRowIndex] =
-              this._state.blocks[blocksRowIndex].map((cell, cellIndex) => {
+            updatedBlocks[blocksRowIndex] =
+              updatedBlocks[blocksRowIndex].map((cell, cellIndex) => {
                 if (cellIndex === curPos[0] + colIndex) {
                   return {
                     color,
-                    size: this._state.blockWidth,
+                    size: blockSize,
                   }
                 }
 
@@ -389,9 +437,10 @@ class Tetris {
               });
 
             
+            // identify if we have any full lines
             if (
               !rowsLineChecked.includes(blocksRowIndex) &&
-              this._state.blocks[blocksRowIndex].find(block => !block) === undefined
+              updatedBlocks[blocksRowIndex].find(block => !block) === undefined
             ) {
               rowsLineChecked.push(blocksRowIndex);
               lines.push(blocksRowIndex);
@@ -400,48 +449,45 @@ class Tetris {
         });
       });
 
-      this.blocksBoard.setState({ blocks: this._state.blocks });
+      const newState = { blocks: updatedBlocks };
+      this.clearActivePiece();
 
       if (lines.length) {
-        console.log(lines);
-
-        // todo: pause these filberts on pause;
         this._lineRemovals = lines.map(lineIndex =>
           this
             .blocksBoard
             .animateRowPreRemoval(lineIndex)
-            .promise
         );
         
-        console.log('boom');
-        window.boom = this._lineRemovals;
-        
         Promise
-          .all(this._lineRemovals)
+          .all(this._lineRemovals.map(l => l.promise))
           .then(() => {
-            // console.dir(lines.map(line => Array(this._state.cols).fill(null)));
-            // console.dir(this._state.blocks
-            //     .filter((row, rowIndex) => !lines.includes(rowIndex)));
-            this._state.blocks =[
-              ...lines.map(line => Array(this._state.cols).fill(null)),
-              ...this._state.blocks
-                .filter((row, rowIndex) => !lines.includes(rowIndex))
+            updatedBlocks = [
+              ...lines.map(line => Array(cols).fill(null)),
+              ...updatedBlocks.filter((row, rowIndex) => !lines.includes(rowIndex))
             ];
-            // console.dir(this._state.blocks);
-            this.blocksBoard.setState({ blocks: this._state.blocks });
+            this.setState({ blocks: updatedBlocks });
+            this._lineRemovals = null;
+            this.dropNewPiece();
           });
+
+          newState.lines = lines.length;
+          newState.score += this.computeScore(lines.length, this.getState().level);
+          // todo: update level
+      } else {
+        this.dropNewPiece();
       }
 
-      this.clearActivePiece();
-      this.dropNewPiece();
+      this.setState(newState);
+
       return;
     }
 
     this.activePieceContainer.setState({ position: [curPos[0], curPos[1] + 1] });
 
-    window.clearTimeout(this._progressPieceTimeout);
-    this._progressPieceTimeout = window.setTimeout(() => {
-      window.requestAnimationFrame(this.progressPiece.bind(this));
+    window.clearTimeout(this._tickTimeout);
+    this._tickTimeout = window.setTimeout(() => {
+      window.requestAnimationFrame(this.tick.bind(this));
     }, activePieceDropSpeedFactor - ((level - 1) * 100));
     // TODO: that will be 0 at a high enouggh level. Prevent it going below 20.    
   }
@@ -453,10 +499,7 @@ class Tetris {
   }
 
   dropNewPiece() {
-    const {
-      blockHeight,
-      blockWidth,
-    } = this._state;
+    const { blockSize, cols } = this.getState();
 
     const colors = [
       '#cb42f5',
@@ -469,8 +512,7 @@ class Tetris {
     const instance = newPiece.instance = new Piece({
       initialState: {
         shape: newPiece.shape,
-        blockHeight,
-        blockWidth,
+        blockSize,
         color: colors[randomInt(0, colors.length - 1)],
       },
     });
@@ -479,14 +521,14 @@ class Tetris {
       const {
         rows,
         cols,
-        blockWidth,
-      } = this._state;
+        blockSize,
+      } = this.getState();
 
       this.activePieceContainer = new ActivePieceBoard({
         initialState: {
-          width: cols,
-          height: rows,
-          blockSize: blockWidth,
+          cols,
+          rows,
+          blockSize,
         },
       }).render();
       this.activePieceContainer._el.style.position = 'absolute';
@@ -503,12 +545,12 @@ class Tetris {
     this.activePieceContainer.setState({
       piece: instance,
       position: [
-        Math.floor((this._state.cols - fWidth) / 2) - leftEdge,
+        Math.floor((cols - fWidth) / 2) - leftEdge,
         (Math.floor(fHeight / 2)  + topEdge) * -1
       ],
     });
-    this._state.activePiece = newPiece;
-    this.rafProgressPiece();
+    this.setState({ activePiece: newPiece });
+    this.rafTick();
   }
 
   start() {
@@ -516,27 +558,37 @@ class Tetris {
       started,
       gameOver,
       activePiece,
-    } = this._state;
+    } = this.getState();
 
     if (!started && !gameOver) {
-      this._state.started = true;
+      this.setState({ started: true });
 
       if (!activePiece) {
         this.dropNewPiece();
       } else {
-        this.rafProgressPiece();
+        this.rafTick();
       }
-    }
+
+      // resume any line removal animations
+      (this._lineRemovals || [])
+        .forEach(l => l.resume());
+      }
   }
 
   stop() {
-    this._state.started = false;
+    this.setState({ started: false });
     window.cancelAnimationFrame(this._progressPieceRaf);
-    window.clearTimeout(this._progressPieceTimeout);    
+    window.clearTimeout(this._tickTimeout);
+
+    // pause any line removal animations
+    (this._lineRemovals || [])
+      .forEach(l => l.stop());
   }
 
-  destroy() {
+  remove() {
+    this.stop();
     document.removeEventListener('keydown', this.onKeyDown, false);
+    this.removeAllListeners();
   }
 
   /*

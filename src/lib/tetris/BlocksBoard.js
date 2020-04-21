@@ -1,5 +1,6 @@
 // todo: warn that empy cell must be null
 
+import { v1 as uuid } from 'uuid';
 import { empty } from 'util/dom';
 import BaseVw from './BaseVw';
 import Block from './Block';
@@ -68,6 +69,18 @@ class BlocksBoard extends BaseVw {
     return super.setState(state, options);
   }
 
+  setRowPreRemovalVal(key, val) {
+    this._rowPreRemovalRafMap = this._rowPreRemovalRafMap || {};
+    this._rowPreRemovalRafMap[key] = val;
+  }
+
+  cancelRowPreRemovalRaf(key) {
+    if (this._rowPreRemovalRafMap) {
+      const raf = this._rowPreRemovalRafMap[key];
+      if (raf !== undefined) window.cancelAnimationFrame(raf);
+    }
+  }  
+
   animateRowPreRemoval(index) {
     if (!Number.isInteger(index)) {
       throw new Error('The index must be provided as an integer.');
@@ -85,7 +98,8 @@ class BlocksBoard extends BaseVw {
     let resume;
 
     const promise = new Promise((resolve, reject) => {
-      const time = 100; // this times 4 is the total anim time
+      const pid = uuid();
+      const time = 50; // this times 4 is the total anim time
       const blinkCount = 2;
       let curBlink =  0;
       let start = null;
@@ -96,12 +110,12 @@ class BlocksBoard extends BaseVw {
 
       const makeAStep = () => {
         isStopped = false;
-        window.cancelAnimationFrame(this._rafRowPreRemoval);
-        this._rafRowPreRemoval = window.requestAnimationFrame(step);
+        this.cancelRowPreRemovalRaf(pid);
+        this.setRowPreRemovalVal(pid, window.requestAnimationFrame(step));
       }      
 
       cancel = () => {
-        window.cancelAnimationFrame(this._rafRowPreRemoval);
+        this.cancelRowPreRemovalRaf(pid);
         row.style.opacity = 1;
         reject('canceled');
       };
@@ -109,7 +123,7 @@ class BlocksBoard extends BaseVw {
       stop = () => {
         isStopped = true;
         stoppedAt = performance.now();
-        window.cancelAnimationFrame(this._rafRowPreRemoval);
+        this.cancelRowPreRemovalRaf(pid);
       };
 
       resume = () => {
@@ -147,7 +161,6 @@ class BlocksBoard extends BaseVw {
             stepOut = true;
             makeAStep();
           } else {
-            console.log('hey ho less resolve');
             resolve();
           }
         }

@@ -5,7 +5,10 @@ import { shallowEqualObjects } from 'util/object';
 class BaseVw {
   constructor(options = {}) {
     this._state = {};
-    this.setState((options.initialState || {}), { renderOnChange: false });
+    this.setState((options.initialState || {}), {
+      renderOnChange: false,
+      beingConstructed: true,
+    });
   }
 
   /**
@@ -53,7 +56,7 @@ class BaseVw {
 
     this._state = newState;
 
-    if (opts.renderOnChange) {
+    if (opts.renderOnChange && typeof this.render === 'function') {
       if (!shallowEqualObjects(oldState, newState)) {
         this.render();
       }

@@ -7,7 +7,7 @@ import Block from './Block';
  * could return old results.
  */
 const memoizedMeta = memoize(
-  (shape, blockWidth, blockHeight) => {
+  shape => {
     if (!Array.isArray(shape)) {
       throw new Error('The shape must be provided as an array.');
     }
@@ -78,8 +78,7 @@ class Piece extends BaseVw {
       ...options,
       initialState: {
         color: 'yellow',
-        blockWidth: 30,
-        blockHeight: 30,
+        blockSize: 30,
         ...options.initialState,
       },
     });
@@ -91,17 +90,13 @@ class Piece extends BaseVw {
     this.render();
   }
 
-  static getMeta(shape, blockWidth, blockHeight) {
-    return memoizedMeta(shape, blockWidth, blockHeight);
+  static getMeta(shape) {
+    return memoizedMeta(shape);
   }
 
   get meta() {
-    const {
-      shape,
-      blockWidth,
-      blockHeight,
-    } = this.getState();
-    return memoizedMeta(shape, blockWidth, blockHeight);
+    const { shape } = this.getState();
+    return memoizedMeta(shape);
   }
 
   setState(state={}, options) {
@@ -123,6 +118,7 @@ class Piece extends BaseVw {
 
   render() {
     const state = this.getState();
+    const { blockSize } = state;
 
     let shape = state.shape;
     shape = Array.isArray(shape) ? shape : [];
@@ -136,15 +132,14 @@ class Piece extends BaseVw {
         let block = this._blocks[blockIndex];
 
         if (!block) {
-          // todo: change to blockSize
-          block = new Block(state.blockWidth, state.color);
+          block = new Block(blockSize, state.color);
           block.el.style.position = 'absolute';
           this._el.appendChild(block.el);
           this._blocks.push(block);
         }
 
-        block.el.style.top = `${rowIndex * state.blockHeight}px`;
-        block.el.style.left = `${cellIndex * state.blockWidth}px`;
+        block.el.style.top = `${rowIndex * blockSize}px`;
+        block.el.style.left = `${cellIndex * blockSize}px`;
         blockIndex++;
       });
     });

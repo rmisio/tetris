@@ -4,13 +4,24 @@ import './App.css';
 
 function App() {
   const gameContainer = useRef(null);
-  const tetrisWidth = 210;
-  // const tetrisWidth = 300;
+  const [rows, setRows] = useState(18);
+  const [cols, setCols] = useState(10);
+  const [blockSize, setBlockSize] = useState(15);
   const [tetris, setTetris] = useState(null);
   const [paused, setPaused] = useState(false);
 
   useEffect(() => {
-    setTetris(new Tetris(gameContainer.current, tetrisWidth));
+    const tetris = new Tetris(gameContainer.current, {
+      initialState: {
+        blockSize,
+        rows,
+        cols,
+      }
+    });
+
+    // TODO: remove me on unmount
+    tetris.on('updateStats', e => console.dir(e));
+    setTetris(tetris);
   }, []);
 
   const handlePause = () => {
@@ -39,7 +50,8 @@ function App() {
         style={{
           margin: '0 auto',
           backgroundColor: 'black',
-          width: `${tetrisWidth}px`, 
+          width: `${cols * blockSize}px`,
+          height: `${rows * blockSize}px`,
         }}
       />
       {ControlBtn}
