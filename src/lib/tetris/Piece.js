@@ -1,4 +1,5 @@
 import { memoize } from 'lodash';
+import { empty } from 'util/dom';
 import BaseVw from './BaseVw';
 import Block from './Block';
 
@@ -86,7 +87,6 @@ class Piece extends BaseVw {
     const container = this._el = document.createElement('div');
     container.style.position = 'relative';
     // container.style.backgroundColor = '#FFF';
-    this._blocks = [];
     this.render();
   }
 
@@ -120,27 +120,20 @@ class Piece extends BaseVw {
     const state = this.getState();
     const { blockSize } = state;
 
+    empty(this._el);
+
     let shape = state.shape;
     shape = Array.isArray(shape) ? shape : [];
-
-    let blockIndex = 0;
 
     shape.forEach((row, rowIndex) => {
       row.forEach((cell, cellIndex) => {
         if (!cell) return;
 
-        let block = this._blocks[blockIndex];
-
-        if (!block) {
-          block = new Block(blockSize, state.color);
-          block.el.style.position = 'absolute';
-          this._el.appendChild(block.el);
-          this._blocks.push(block);
-        }
-
+        const block = new Block(blockSize, state.color);
+        block.el.style.position = 'absolute';
+        this._el.appendChild(block.el);
         block.el.style.top = `${rowIndex * blockSize}px`;
         block.el.style.left = `${cellIndex * blockSize}px`;
-        blockIndex++;
       });
     });
 

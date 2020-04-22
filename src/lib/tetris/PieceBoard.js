@@ -23,8 +23,6 @@ class PieceBoard extends BaseVw {
     // Todo: maybe make a Board parent class?
     this._el = document.createElement('div');
     this._el.id = 'PIECE_BOARD';
-    this._el.style.width = `${blockSize * cols}px`;
-    this._el.style.height = `${blockSize * rows}px`;
   }
 
   get el() {
@@ -92,9 +90,13 @@ class PieceBoard extends BaseVw {
       piece,
       blockSize,
       position,
+      cols,
+      rows,
     } = this.getState();
 
     empty(this._el);
+    this._el.style.width = `${blockSize * cols}px`;
+    this._el.style.height = `${blockSize * rows}px`;    
 
     if (piece) {
       piece.el.style.position = 'absolute';

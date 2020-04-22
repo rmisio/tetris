@@ -34,8 +34,7 @@ class BlocksBoard extends BaseVw {
 
     this._el = document.createElement('div');
     this._el.id = 'BLOCKS_BOARD';
-    this._el.style.width = `${blockSize * cols}px`;
-    this._el.style.height = `${blockSize * rows}px`;
+    this._rowRemovalAnims = {};
   }
 
   get el() {
@@ -93,14 +92,19 @@ class BlocksBoard extends BaseVw {
         'rendered by this element.');
     }
 
+    if (this._rowRemovalAnims[index]) {
+      this._rowRemovalAnims[index].cancel();
+      delete this._rowRemovalAnims[index];
+    }
+
     let cancel;
     let stop;
     let resume;
 
     const promise = new Promise((resolve, reject) => {
       const pid = uuid();
-      const time = 50; // this times 4 is the total anim time
-      const blinkCount = 2;
+      const time = 1000; // this times 4 is the total anim time
+      const blinkCount = 1;
       let curBlink =  0;
       let start = null;
       let stepOut = true;
@@ -142,7 +146,7 @@ class BlocksBoard extends BaseVw {
         const progress = timestamp - start - timeStopped;
 
         if (stepOut) {
-          row.style.opacity = 1 - easeOutSine(Math.min(progress / time, 1));  
+          row.style.opacity = 1 - easeOutSine(Math.min(progress / time, 1));
         } else {
           row.style.opacity = easeInSine(progress / time);
         }
@@ -169,21 +173,33 @@ class BlocksBoard extends BaseVw {
       makeAStep();
     });
 
-    return {
+    const returnVal = this._rowRemovalAnims[index] = {
       promise,
       cancel,
       stop,
       resume,
     };
+
+    return returnVal;
   }
 
   render() {
     const {
       blocks,
       blockSize,
+      cols,
+      rows,
     } = this.getState();
 
     empty(this._el);
+    this._el.style.width = `${blockSize * cols}px`;
+    this._el.style.height = `${blockSize * rows}px`;
+
+    Object
+      .keys(this._rowRemovalAnims)
+      .forEach(rowIndex => this._rowRemovalAnims[rowIndex].cancel());
+
+    this._rowRemovalAnims = {};
 
     (blocks || []).forEach((row, rowIndex) => {
       if (!Array.isArray(row)) {
@@ -198,7 +214,7 @@ class BlocksBoard extends BaseVw {
           let block;
 
           try {
-            block = new Block(cell.size, cell.color);
+            block = new Block(blockSize, cell.color);
           } catch (e) {
             console.warn(`Unable to create block at [${rowIndex}, ${cellIndex}]:`, e);
             return;

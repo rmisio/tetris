@@ -6,12 +6,12 @@ function App() {
   const gameContainer = useRef(null);
   const [rows, setRows] = useState(18);
   const [cols, setCols] = useState(10);
-  const [blockSize, setBlockSize] = useState(15);
+  const [blockSize, setBlockSize] = useState(20);
   const [tetris, setTetris] = useState(null);
   const [paused, setPaused] = useState(false);
 
   useEffect(() => {
-    const tetris = new Tetris(gameContainer.current, {
+    const t = new Tetris(gameContainer.current, {
       initialState: {
         blockSize,
         rows,
@@ -19,10 +19,25 @@ function App() {
       }
     });
 
-    // TODO: remove me on unmount
-    tetris.on('updateStats', e => console.dir(e));
-    setTetris(tetris);
+    // t.on('updateStats', e => console.dir(e));
+    setTetris(t);
+
+    return () => {
+      t.remove();
+      setTetris(null);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (tetris) {
+      tetris.setState({ blockSize });
+    }
+  }, [tetris, blockSize])
+
+  window.filly = a => {
+    setBlockSize(a)
+  };
 
   const handlePause = () => {
     if (!paused) {

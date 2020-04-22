@@ -56,7 +56,7 @@ class BaseVw {
 
     this._state = newState;
 
-    if (opts.renderOnChange && typeof this.render === 'function') {
+    if (opts.renderOnChange) {
       if (!shallowEqualObjects(oldState, newState)) {
         this.render();
       }
