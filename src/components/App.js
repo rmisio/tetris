@@ -4,13 +4,29 @@ import './App.css';
 
 function App() {
   const gameContainer = useRef(null);
-  const [rows, setRows] = useState(18);
-  const [cols, setCols] = useState(10);
-  const [blockSize, setBlockSize] = useState(20);
+  const [rows] = useState(18);
+  const [cols] = useState(10);
+  const [blockSize, setBlockSize] = useState(0);
   const [tetris, setTetris] = useState(null);
   const [paused, setPaused] = useState(false);
 
+  const calcBlockSize = htmlEl => {
+    const cWidth = htmlEl.clientWidth;
+    const cHeight = htmlEl.clientHeight;
+    let h = cHeight * .85;
+    let w = h * .55555;
+
+    if (w > cWidth - 10) {
+      w = cWidth - 10;
+    }
+
+    return Math.floor(w / 10);
+  };
+
   useEffect(() => {
+    const htmlEl = document.querySelector('html');
+    const blockSize = calcBlockSize(htmlEl);
+
     const t = new Tetris(gameContainer.current, {
       initialState: {
         blockSize,
@@ -20,12 +36,22 @@ function App() {
     });
 
     // t.on('updateStats', e => console.dir(e));
+    
     setTetris(t);
+    setBlockSize(blockSize);
+
+    const onResize = e => {
+      setBlockSize(calcBlockSize(htmlEl));
+    };
+
+    window.addEventListener('resize', onResize);
 
     return () => {
       t.remove();
       setTetris(null);
+      window.removeEventListener('resize', onResize);
     };
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -34,10 +60,6 @@ function App() {
       tetris.setState({ blockSize });
     }
   }, [tetris, blockSize])
-
-  window.filly = a => {
-    setBlockSize(a)
-  };
 
   const handlePause = () => {
     if (!paused) {
