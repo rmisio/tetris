@@ -10,65 +10,7 @@ import BaseVw from './BaseVw.js';
 import ActivePieceBoard from './PieceBoard';
 import BlocksBoard from './BlocksBoard';
 import Piece from './Piece';
-
-const PIECES = [
-  {
-    shape: [
-      [0, 1, 0, 0],
-      [0, 1, 0, 0],
-      [0, 1, 0, 0],
-      [0, 1, 0, 0],
-    ],
-    rotatable: true,
-  },
-  {
-    shape: [
-      [0, 1, 0],
-      [1, 1, 0],
-      [0, 1, 0],
-    ],
-    rotatable: true,
-  },
-  {
-    shape: [
-      [0, 0, 0],
-      [1, 1, 0],
-      [0, 1, 1],
-    ],
-    rotatable: true,
-  },
-  {
-    shape: [
-      [0, 0, 0],
-      [0, 1, 1],
-      [1, 1, 0],
-    ],
-    rotatable: true,
-  },
-  {
-    shape: [
-      [0, 0, 0],
-      [1, 1, 1],
-      [1, 0, 0],
-    ],
-    rotatable: true,
-  },
-  {
-    shape: [
-      [0, 0, 0],
-      [1, 1, 1],
-      [0, 0, 1],
-    ],
-    rotatable: true,
-  },
-  {
-    shape: [
-      [1, 1],
-      [1, 1],
-    ],
-    rotatable: false,
-  },
-];
+import shapes from './shapes';
 
 // TODO: take into account rotatable property.
 
@@ -107,7 +49,7 @@ class Tetris extends BaseVw {
       ...options.initialState,      
     };
 
-    initialState.blocks = [
+    initialState.initialBlocks = [
       [null, null, null, null, null, null, null, null, null, null],
       [null, null, null, null, null, null, null, null, null, null],
       [null, null, null, null, null, null, null, null, null, null],
@@ -148,7 +90,7 @@ class Tetris extends BaseVw {
       blockSize,
       rows,
       cols,
-      blocks,
+      initialBlocks: blocks,
     } = this.getState();
 
     const container = this._el = document.createElement('div');
@@ -169,6 +111,9 @@ class Tetris extends BaseVw {
     this.blocksBoard._el.style.position = 'absolute';
     this._el.appendChild(this.blocksBoard.render().el);
 
+    this._lineRemovals = [];
+    this._interruptedLineRemovals = false;
+
     this.start();
   }
 
@@ -188,7 +133,6 @@ class Tetris extends BaseVw {
     if (options.beingConstructed) return this;
 
     const {
-      blocks,
       rows,
       cols,
       blockSize,
@@ -198,35 +142,34 @@ class Tetris extends BaseVw {
       activePiece,
     } = this.getState();
 
-    if (
-      prevState.blockSize !== blockSize ||
-      prevState.rows !== rows ||
-      prevState.cols !== cols
-    ) {
+    // Although not enforced, blockSize is the only state we're potentially
+    // expecting to be changed from the outside after initialization.
+    if (prevState.blockSize !== blockSize) {
       this._el.style.width = `${blockSize * cols}px`;
       this._el.style.height = `${blockSize * rows}px`;
-    }
 
-    // funnel state to child components
+      if (this.blocksBoard) {
+        this.blocksBoard.setState({ blockSize });
+      }
 
-    if (this.blocksBoard) {
-      this.blocksBoard.setState({
-        blocks, rows, cols, blockSize,
-      });
-    }
+      if (activePiece) {
+        activePiece
+          .instance
+          .setState({ blockSize });
+      }
 
-    if (activePiece) {
-      activePiece
-        .instance
-        .setState({ blockSize });
-    }
+      if (this.activePieceContainer) {
+        this.activePieceContainer.setState({ blockSize });
+      }
 
-    if (this.activePieceContainer) {
-      this.activePieceContainer.setState({
-        cols,
-        rows,
-        blockSize,
-      });
+      // Updating the blocksBoard with a new blocksize will
+      // cause it to re-render and lose the dom element of
+      // any in-flight row removal animation. If there were any
+      // active animations, we'll set a flag, so they could be
+      // resumed in a way where they requery the dom for a new
+      // element and resume where they left off.
+      this._interruptedLineRemovals = !!this._lineRemovals.length;
+      if (this._interruptedLineRemovals) this.rafTick();
     }
 
     // if necessary, fire change events
@@ -248,8 +191,8 @@ class Tetris extends BaseVw {
     const {
       cols,
       rows,
-      blocks,
     } = this.getState();
+    const { blocks } = this.blocksBoard.getState();
 
     // check if we are within game boundaries
     if (
@@ -285,10 +228,8 @@ class Tetris extends BaseVw {
   // TODO: memoize if reasonable
   // TODO: check args  
   isGrounded(pieceMeta, shape, pos) {
-    const {
-      rows,
-      blocks,
-    } = this.getState();
+    const { rows } = this.getState();
+    const { blocks } = this.blocksBoard.getState();
 
     if (pos[1] + pieceMeta.botEdge >= rows) return true;
 
@@ -348,10 +289,9 @@ class Tetris extends BaseVw {
             newPos = [curPos[0], curPos[1] + 2];
           }
 
-          // if (this.willFit(piece.meta, piece.getState().shape, newPos)) {
-          //   this.activePieceContainer.setState({ position: newPos });
-          // }
-          console.dir(this.getBoardStatus(piece, newPos, this.getState().blocks));
+          if (this.willFit(piece.meta, piece.getState().shape, newPos)) {
+            this.activePieceContainer.setState({ position: newPos });
+          }
         } else {
           // up key, let's rotate
           const { blockSize } = this.getState();
@@ -406,62 +346,7 @@ class Tetris extends BaseVw {
     return (50 * level) + ((lineCount - 1) * 10);
   }
 
-  // note about cutting corner and not optimzing around an empty piece -
-  // easier to use universal func
-  getBoardStatus(piece, piecePos, blocks) {
-    // if (pos[1] + pieceMeta.botEdge >= rows) return true;
-    // let isGrounded = piecePos[1] + piece.meta >= rows;
-    
-    let gameOver = false;
-    let lines = [];
-
-    const {
-      rows,
-      cols,
-    } = this.getState();
-
-    const absolutePieceBot = piecePos[1] + piece.meta.botEdge;
-    const absolutePieceLeft = piecePos[0] + piece.meta.leftEdge;
-    const absolutePieceRight = piecePos[0] + piece.meta.rightEdge;
-    const invalidPiecePos =
-      absolutePieceBot > rows - 1 ||
-      absolutePieceLeft < 0 ||
-      absolutePieceRight > cols - 1;
-    let isGrounded = absolutePieceBot >= rows;
- 
-    for (let rowIndex = 0; rowIndex < blocks.length; rowIndex++) {
-      let lineFull = true;
-
-      for (let colIndex = 0; colIndex < blocks[rowIndex].length; colIndex++) {
-        if (!blocks[rowIndex][colIndex]) {
-          lineFull = false;
-        } else {
-          if (rowIndex === 0) {
-            gameOver = true;
-          }
-
-          // if the piece has a block in the cell above, then it's grounded
-          if (
-            piece.shape[piecePos[1] - rowIndex - 1][piecePos[0] - colIndex]
-          ) {
-            isGrounded = true;
-          }
-        }
-      }
-
-      if (lineFull) lines.push(rowIndex);
-    }
-
-    return {
-      isGrounded,
-      gameOver,
-      lines,
-      invalidPiecePos,
-    };
-  }
-
   rafTick() {
-    return;
     window.cancelAnimationFrame(this._progressPieceRaf);
     this._progressPieceRaf =
       window.requestAnimationFrame(this.tick.bind(this));; 
@@ -476,7 +361,17 @@ class Tetris extends BaseVw {
       activePieceDropSpeedFactor,
     } = this.getState();
 
-    if (!started || gameOver || !activePiece) return;
+    if (!started || gameOver) return;
+
+    if (this._lineRemovals.length) {
+      this._lineRemovals
+        .forEach(l => l.resume({ requeryRow: this._interruptedLineRemovals }));
+      this._interruptedLineRemovals = false;
+      return;
+    } else if (!activePiece) {
+      this.dropNewPiece();
+      return;
+    }
 
     // check for game over
     // check for full lines
@@ -492,7 +387,8 @@ class Tetris extends BaseVw {
         this.activePieceContainer.getState().position
       )
     ) {
-      const { blockSize, blocks, cols } = this.getState();
+      const { blockSize, cols } = this.getState();
+      const { blocks } = this.blocksBoard.getState();
       const lines = [];
       const rowsLineChecked = [];
       let updatedBlocks = [...blocks];
@@ -528,7 +424,9 @@ class Tetris extends BaseVw {
         });
       });
 
-      this.setState({ blocks: updatedBlocks });
+      this
+        .blocksBoard
+        .setState({ blocks: updatedBlocks });
       this.clearActivePiece();
 
       if (lines.length) {
@@ -545,12 +443,14 @@ class Tetris extends BaseVw {
               ...lines.map(line => Array(cols).fill(null)),
               ...updatedBlocks.filter((row, rowIndex) => !lines.includes(rowIndex))
             ];
+            this
+              .blocksBoard
+              .setState({ blocks: updatedBlocks });            
             this.setState({
-              blocks: updatedBlocks,
               lines: lines.length,
               score: this.computeScore(lines.length, this.getState().level),
             });
-            this._lineRemovals = null;
+            this._lineRemovals = [];
             this.dropNewPiece();
           }).catch(() => {
             (this._lineRemovals || []).forEach(l => l.cancel());
@@ -590,7 +490,7 @@ class Tetris extends BaseVw {
     ];
 
     this.clearActivePiece();
-    const newPiece = PIECES[randomInt(0, PIECES.length - 1)];
+    const newPiece = shapes[randomInt(0, shapes.length - 1)];
     const instance = newPiece.instance = new Piece({
       initialState: {
         shape: newPiece.shape,
@@ -639,22 +539,11 @@ class Tetris extends BaseVw {
     const {
       started,
       gameOver,
-      activePiece,
     } = this.getState();
 
     if (!started && !gameOver) {
       this.setState({ started: true });
-
-      // todo: should this go into RAFtick?
-      if (this._lineRemovals && this._lineRemovals.length) {
-        this._lineRemovals
-          .forEach(l => l.resume());
-      // } else if (!activePiece) {
-      //   this.dropNewPiece();
-      } else {
-        this.dropNewPiece();
-        this.rafTick();
-      }
+      this.rafTick();
     }
   }
 

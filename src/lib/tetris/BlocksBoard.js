@@ -26,13 +26,8 @@ class BlocksBoard extends BaseVw {
       }
     });
 
-    const {
-      rows,
-      cols,
-      blockSize,
-    } = this.getState();
-
     this._el = document.createElement('div');
+    // TODO: remove these dubugging IDs
     this._el.id = 'BLOCKS_BOARD';
     this._rowRemovalAnims = {};
   }
@@ -80,17 +75,33 @@ class BlocksBoard extends BaseVw {
     }
   }  
 
+  // todo: note about startState, only pass in under certain conditions.
   animateRowPreRemoval(index) {
     if (!Number.isInteger(index)) {
       throw new Error('The index must be provided as an integer.');
     }
 
-    const row = this._el.children[index];
+    const getRow = () => {
+      const r = this._el.children[index];
 
-    if (!row) {
-      throw new Error('The provided index does not correspond to any rows ' +
-        'rendered by this element.');
-    }
+      if (!r) {
+        throw new Error(`There is no row element corresponding to index ${index}.`);
+      }
+
+      return r;
+    };
+
+    let row = getRow();
+
+    const state = {
+      time: 400,
+      curBlink:  0,
+      start: null,
+      stepOut: true,
+      isStopped: false,
+      stoppedAt: 0,
+      timeStopped: 0,
+    };   
 
     if (this._rowRemovalAnims[index]) {
       this._rowRemovalAnims[index].cancel();
@@ -103,17 +114,11 @@ class BlocksBoard extends BaseVw {
 
     const promise = new Promise((resolve, reject) => {
       const pid = uuid();
-      const time = 1000; // this times 4 is the total anim time
-      const blinkCount = 1;
-      let curBlink =  0;
-      let start = null;
-      let stepOut = true;
-      let isStopped = false;
-      let stoppedAt = 0;
-      let timeStopped = 0;
+      const time = Math.round(state.time / 4);
+      const blinkCount = 2;
 
       const makeAStep = () => {
-        isStopped = false;
+        state.isStopped = false;
         this.cancelRowPreRemovalRaf(pid);
         this.setRowPreRemovalVal(pid, window.requestAnimationFrame(step));
       }      
@@ -121,31 +126,41 @@ class BlocksBoard extends BaseVw {
       cancel = () => {
         this.cancelRowPreRemovalRaf(pid);
         row.style.opacity = 1;
+        delete this._rowRemovalAnims[index];
         reject('canceled');
       };
 
       stop = () => {
-        isStopped = true;
-        stoppedAt = performance.now();
+        state.isStopped = true;
+        state.stoppedAt = performance.now();
         this.cancelRowPreRemovalRaf(pid);
       };
 
-      resume = () => {
-        if (isStopped) {
-          timeStopped += performance.now() - stoppedAt;
+      resume = (options = {}) => {
+        const opts = {
+          requeryRow: false,
+          ...options,
+        };
+
+        if (state.isStopped) {
+          if (opts.requeryRow) {
+            row = getRow();
+          }
+
+          state.timeStopped += performance.now() - state.stoppedAt;
           makeAStep();
         }
       };
 
       function step(timestamp) {
-        if (!start) {
-          start = timestamp;
-          timeStopped = 0;
+        if (!state.start) {
+          state.start = timestamp;
+          state.timeStopped = 0;
         }
         
-        const progress = timestamp - start - timeStopped;
+        const progress = timestamp - state.start - state.timeStopped;
 
-        if (stepOut) {
+        if (state.stepOut) {
           row.style.opacity = 1 - easeOutSine(Math.min(progress / time, 1));
         } else {
           row.style.opacity = easeInSine(progress / time);
@@ -153,16 +168,16 @@ class BlocksBoard extends BaseVw {
 
         if (progress < time) {
           makeAStep();
-        } else if (stepOut) {
-          start = null;
-          stepOut = false;
+        } else if (state.stepOut) {
+          state.start = null;
+          state.stepOut = false;
           makeAStep();
         } else {
-          curBlink += 1;
+          state.curBlink += 1;
 
-          if (curBlink < blinkCount) {
-            start = null;
-            stepOut = true;
+          if (state.curBlink < blinkCount) {
+            state.start = null;
+            state.stepOut = true;
             makeAStep();
           } else {
             resolve();
@@ -197,9 +212,7 @@ class BlocksBoard extends BaseVw {
 
     Object
       .keys(this._rowRemovalAnims)
-      .forEach(rowIndex => this._rowRemovalAnims[rowIndex].cancel());
-
-    this._rowRemovalAnims = {};
+      .forEach(rowIndex => this._rowRemovalAnims[rowIndex].stop());
 
     (blocks || []).forEach((row, rowIndex) => {
       if (!Array.isArray(row)) {
