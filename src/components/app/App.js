@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import Tetris from 'lib/tetris/Tetris';
+import 'styles/main.scss';
 import './App.scss';
 
 function App() {
@@ -10,9 +11,9 @@ function App() {
   const [tetris, setTetris] = useState(null);
   const [paused, setPaused] = useState(false);
 
-  const calcBlockSize = htmlEl => {
-    const cWidth = htmlEl.clientWidth;
-    const cHeight = htmlEl.clientHeight;
+  const calcBlockSize = el => {
+    const cWidth = el.clientWidth;
+    const cHeight = el.clientHeight;
     let h = cHeight * .85;
     let w = h * .55555;
 
@@ -24,8 +25,9 @@ function App() {
   };
 
   useEffect(() => {
-    const htmlEl = document.querySelector('html');
-    const blockSize = calcBlockSize(htmlEl);
+    // const tetrisCellEl = document.getElementById('tetrisCell');
+    const tetrisCellEl = document.querySelector('html');
+    const blockSize = calcBlockSize(tetrisCellEl);
 
     const t = new Tetris(gameContainer.current, {
       initialState: {
@@ -41,7 +43,7 @@ function App() {
     setBlockSize(blockSize);
 
     const onResize = e => {
-      setBlockSize(calcBlockSize(htmlEl));
+      setBlockSize(calcBlockSize(tetrisCellEl));
     };
 
     window.addEventListener('resize', onResize);
@@ -83,20 +85,28 @@ function App() {
   return (
     <div className="App">
       <header id="mainHeader">
-        <h1>Welcome to Tetris. Boom!</h1>
+        <div className="siteWidth">
+          <h1>Tetris</h1>
+        </div>
       </header>
-      <div id="tetrisCell">
-        <div
-          ref={gameContainer}
-          style={{
-            margin: '0 auto',
-            backgroundColor: 'black',
-            width: `${cols * blockSize}px`,
-            height: `${rows * blockSize}px`,
-          }}
-        />
-        {ControlBtn}
-      </div>
+      <main className="siteWidth">
+        <div>
+          What did you say?
+        </div>
+        <div id="tetrisCell">
+          <div
+            ref={gameContainer}
+            style={{
+              margin: '0 auto',
+              backgroundColor: 'black',
+              width: `${cols * blockSize}px`,
+              height: `${rows * blockSize}px`,
+            }}
+          />
+          {ControlBtn}
+        </div>
+        <div>Oh no he didn't</div>
+      </main>
     </div>
   );
 }

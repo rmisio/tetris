@@ -44,14 +44,14 @@ class BlocksBoard extends BaseVw {
         dim > 0
       )
     ) {
-      throw new Error(`The ${name } must be provided as an integer > 0.`);
+      throw new Error(`The ${name} must be provided as an integer > 0.`);
     }    
   }
 
   setState(state={}, options) {
-    this._checkDim(state.rows);
-    this._checkDim(state.cols);
-    this._checkDim(state.blockSize);
+    this._checkDim(state.rows, 'rows');
+    this._checkDim(state.cols, 'cols');
+    this._checkDim(state.blockSize, 'blockSize');
 
     if (
       state.blocks !== undefined &&

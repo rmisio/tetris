@@ -1,0 +1,31 @@
+@import 'styles/variables.scss';
+@import '~sass-mq';
+
+.App {
+  margin: 20px auto;
+
+  #mainHeader {
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 20px 0;
+
+    h1 {
+      margin: 0;
+    }
+  }
+
+  main {
+    display: grid;
+
+    & > * {
+      background-color: pink;
+      // grid-template-columns: 1fr 2fr 1fr;      
+    }
+
+    @include mq($from: small) {
+      grid-template-columns: 1fr 2fr 1fr;
+      grid-template-rows: 1fr 3fr 1fr;
+      // align-items: end;
+    }
+  }
+}
+

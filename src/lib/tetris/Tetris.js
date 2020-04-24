@@ -114,7 +114,7 @@ class Tetris extends BaseVw {
     this._lineRemovals = [];
     this._interruptedLineRemovals = false;
 
-    this.start();
+    // this.start();
   }
 
   get el() {
