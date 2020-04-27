@@ -1,17 +1,29 @@
+@import '~sass-mq';
 @import './variables.scss';
 
 .siteWidth {
   max-width: $maxContentWidth;
   margin: 0 auto;
-  padding: 0 15px;
+
+  @include mq($from: $maxContentWidth - 30) {
+    padding: 0 15px;
+  }
 }
 
 body {
   background: url("../img/asteroids.jpg");
   background-repeat: repeat;
   color: #a0a7ab;
+  font-size: 16px;
+  height: 100vh;
 }
+
+#root { height: 100%; }
 
 h1, h2, h3, h4, h5, h6 {
   color: #FFF;
+}
+
+h1 {
+  font-size: 1.5rem;
 }

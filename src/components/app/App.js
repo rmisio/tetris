@@ -14,7 +14,7 @@ function App() {
   const calcBlockSize = el => {
     const cWidth = el.clientWidth;
     const cHeight = el.clientHeight;
-    let h = cHeight * .85;
+    let h = cHeight - 5;
     let w = h * .55555;
 
     if (w > cWidth - 10) {
@@ -25,9 +25,9 @@ function App() {
   };
 
   useEffect(() => {
-    // const tetrisCellEl = document.getElementById('tetrisCell');
-    const tetrisCellEl = document.querySelector('html');
-    const blockSize = calcBlockSize(tetrisCellEl);
+    const tetrisEl = document.getElementById('tetris');
+    // const tetrisCellEl = document.querySelector('html');
+    const blockSize = calcBlockSize(tetrisEl);
 
     const t = new Tetris(gameContainer.current, {
       initialState: {
@@ -43,7 +43,7 @@ function App() {
     setBlockSize(blockSize);
 
     const onResize = e => {
-      setBlockSize(calcBlockSize(tetrisCellEl));
+      setBlockSize(calcBlockSize(tetrisEl));
     };
 
     window.addEventListener('resize', onResize);
@@ -90,10 +90,7 @@ function App() {
         </div>
       </header>
       <main className="siteWidth">
-        <div>
-          What did you say?
-        </div>
-        <div id="tetrisCell">
+        <div id="tetris">
           <div
             ref={gameContainer}
             style={{
@@ -103,9 +100,23 @@ function App() {
               height: `${rows * blockSize}px`,
             }}
           />
-          {ControlBtn}
         </div>
-        <div>Oh no he didn't</div>
+        <aside id="tetris-level">
+          <h1>Level</h1>
+          <p>3</p>
+        </aside>
+        <aside id="tetris-score">
+          <h1>Score</h1>
+          <p>1,367</p>
+        </aside>
+        <aside id="tetris-high-score">
+          <h1>High Score</h1>
+          <p>9,843</p>
+        </aside>
+        <nav>
+          <p style={{ width: '50%', height: '100%', backgroundColor: 'orange', float: 'left' }}></p>
+          <p style={{ width: '50%', height: '100%', backgroundColor: 'green', float: 'left' }}></p>
+        </nav>
       </main>
     </div>
   );
