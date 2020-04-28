@@ -4,14 +4,17 @@ import 'styles/main.scss';
 import './App.scss';
 
 function App() {
-  const gameContainer = useRef(null);
+  const mainGrid = useRef(null);
   const [rows] = useState(18);
   const [cols] = useState(10);
   const [blockSize, setBlockSize] = useState(0);
   const [tetris, setTetris] = useState(null);
   const [paused, setPaused] = useState(false);
+  const initialMainGTCMobile = 'repeat(6, 1fr)';
+  const initialMainGTCDesktop = 'minmax(82px, 1fr) 2fr minmax(82px, 1fr);';
 
-  const calcBlockSize = el => {
+  const calcBlockSize = () => {
+    const el = mainGrid.current;
     const cWidth = el.clientWidth;
     const cHeight = el.clientHeight;
     let h = cHeight - 5;
@@ -25,11 +28,10 @@ function App() {
   };
 
   useEffect(() => {
-    const tetrisEl = document.getElementById('tetris');
-    // const tetrisCellEl = document.querySelector('html');
-    const blockSize = calcBlockSize(tetrisEl);
+    const tetrisEl = mainGrid.current.children[0];
+    const blockSize = calcBlockSize();
 
-    const t = new Tetris(gameContainer.current, {
+    const t = new Tetris(tetrisEl, {
       initialState: {
         blockSize,
         rows,
@@ -37,13 +39,15 @@ function App() {
       }
     });
 
+    // tetrisEl.style.alignSelf = 'end';
+
     // t.on('updateStats', e => console.dir(e));
     
     setTetris(t);
     setBlockSize(blockSize);
 
     const onResize = e => {
-      setBlockSize(calcBlockSize(tetrisEl));
+      setBlockSize(calcBlockSize());
     };
 
     window.addEventListener('resize', onResize);
@@ -59,9 +63,26 @@ function App() {
 
   useEffect(() => {
     if (tetris) {
+      // this got fugly :(
+      const { matches } = window.matchMedia('(min-width: 48em)');
+      const tetrisEl = mainGrid.current.children[0];
+
+      if (matches) {
+        mainGrid.current.style.gridTemplateColumns = initialMainGTCDesktop;
+      } else {
+        // mainGrid.current.style.gridTemplateColumns = initialMainGTCMobile;
+      }
+
+      tetrisEl.style.alignSelf = 'stretch';
       tetris.setState({ blockSize });
+      tetrisEl.style.alignSelf = 'end';
+      
+      if (matches) {
+        mainGrid.current.style.gridTemplateColumns =
+          `minmax(82px, 1fr) ${blockSize * cols}px minmax(82px, 1fr)`;
+      }
     }
-  }, [tetris, blockSize])
+  }, [tetris, blockSize, cols])
 
   const handlePause = () => {
     if (!paused) {
@@ -89,18 +110,8 @@ function App() {
           <h1>Tetris</h1>
         </div>
       </header>
-      <main className="siteWidth">
-        <div id="tetris">
-          <div
-            ref={gameContainer}
-            style={{
-              margin: '0 auto',
-              backgroundColor: 'black',
-              width: `${cols * blockSize}px`,
-              height: `${rows * blockSize}px`,
-            }}
-          />
-        </div>
+      <main className="siteWidth" ref={mainGrid}>
+        <div id="tetris" />
         <aside id="tetris-level">
           <h1>Level</h1>
           <p>3</p>

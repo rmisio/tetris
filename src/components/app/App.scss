@@ -15,14 +15,13 @@
   #mainHeader {
     background-color: rgba(0, 0, 0, 0.8);
     padding: 15px 10px;
-    background-color: pink;
 
     h1 {
       margin: 0;
       line-height: 1;
     }
 
-    @include mq($from: small) {
+    @include mq($from: medium) {
       padding: 20px 0;
     }
   }
@@ -30,6 +29,8 @@
   main {
     height: 100%;
     width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
     display: grid;
     grid-template-rows: auto 80px 40px;
     grid-template-columns: repeat(6, 1fr);
@@ -40,6 +41,13 @@
     
     #tetris {
       grid-area: tetris;
+
+      & > div {
+        margin: 0 auto;
+        background-color: #000;
+        border: 2px solid rgba(22, 144, 181, 0.25);
+        border-top: none;
+      }
     }
 
     #tetris-level {
@@ -66,9 +74,9 @@
       }
     }
 
-    @include mq($from: small) {
-      grid-template-rows: repeat(4, 1fr) 82px 82px;
-      grid-template-columns: 164px auto 164px;
+    @include mq($from: medium) {
+      grid-template-rows: repeat(4, 1fr) minmax(41px, 82px) minmax(41px, 82px);
+      grid-template-columns: minmax(82px, 1fr) 2fr minmax(82px, 1fr);
       grid-template-areas:
         ". tetris ."
         ". tetris ."
@@ -79,4 +87,3 @@
     }
   }
 }
-

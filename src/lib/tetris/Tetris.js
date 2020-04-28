@@ -94,6 +94,8 @@ class Tetris extends BaseVw {
     } = this.getState();
 
     const container = this._el = document.createElement('div');
+    container.style.width = `${blockSize * cols}px`;
+    container.style.height = `${blockSize * rows}px`;
     container.style.position = 'relative';
 
     document.addEventListener('keydown', this.onKeyDown.bind(this), false);
