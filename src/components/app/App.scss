@@ -32,7 +32,7 @@
     box-sizing: border-box;
     overflow: hidden;
     display: grid;
-    grid-template-rows: auto 80px 40px;
+    grid-template-rows: 1fr 80px 40px;
     grid-template-columns: repeat(6, 1fr);
     grid-template-areas:
       "tetris tetris tetris tetris tetris tetris"
@@ -41,12 +41,14 @@
     
     #tetris {
       grid-area: tetris;
+      align-self: end;
 
       & > div {
         margin: 0 auto;
         background-color: #000;
         border: 2px solid rgba(22, 144, 181, 0.25);
         border-top: none;
+        box-sizing: border-box;
       }
     }
 

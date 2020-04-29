@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import Tetris from 'lib/tetris/Tetris';
 import 'styles/main.scss';
 import './App.scss';
@@ -7,82 +7,85 @@ function App() {
   const mainGrid = useRef(null);
   const [rows] = useState(18);
   const [cols] = useState(10);
-  const [blockSize, setBlockSize] = useState(0);
   const [tetris, setTetris] = useState(null);
   const [paused, setPaused] = useState(false);
+  const [calcTetrisLayout, setCalcTetrisLayout] = useState(true);
   const initialMainGTCMobile = 'repeat(6, 1fr)';
-  const initialMainGTCDesktop = 'minmax(82px, 1fr) 2fr minmax(82px, 1fr);';
-
-  const calcBlockSize = () => {
-    const el = mainGrid.current;
-    const cWidth = el.clientWidth;
-    const cHeight = el.clientHeight;
-    let h = cHeight - 5;
-    let w = h * .55555;
-
-    if (w > cWidth - 10) {
-      w = cWidth - 10;
-    }
-
-    return Math.floor(w / 10);
-  };
+  const initialMainGTCDesktop = 'minmax(82px, 1fr) 2fr minmax(82px, 1fr)';
 
   useEffect(() => {
-    const tetrisEl = mainGrid.current.children[0];
-    const blockSize = calcBlockSize();
-
-    const t = new Tetris(tetrisEl, {
-      initialState: {
-        blockSize,
-        rows,
-        cols,
-      }
-    });
-
-    // tetrisEl.style.alignSelf = 'end';
-
-    // t.on('updateStats', e => console.dir(e));
-    
-    setTetris(t);
-    setBlockSize(blockSize);
-
     const onResize = e => {
-      setBlockSize(calcBlockSize());
+      setCalcTetrisLayout(true);
     };
 
     window.addEventListener('resize', onResize);
 
     return () => {
-      t.remove();
-      setTetris(null);
+      if (tetris) tetris.remove();
+      setTetris(null);      
       window.removeEventListener('resize', onResize);
     };
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // TODO: disable eslint
   }, []);
 
-  useEffect(() => {
-    if (tetris) {
-      // this got fugly :(
+  useLayoutEffect(() => {
+    const mainGridEl = mainGrid.current;
+
+    if (calcTetrisLayout) {
       const { matches } = window.matchMedia('(min-width: 48em)');
-      const tetrisEl = mainGrid.current.children[0];
+      const tetrisContainer = mainGrid.current.children[0];
 
       if (matches) {
         mainGrid.current.style.gridTemplateColumns = initialMainGTCDesktop;
       } else {
-        // mainGrid.current.style.gridTemplateColumns = initialMainGTCMobile;
+        mainGrid.current.style.gridTemplateColumns = initialMainGTCMobile;
       }
 
-      tetrisEl.style.alignSelf = 'stretch';
-      tetris.setState({ blockSize });
-      tetrisEl.style.alignSelf = 'end';
+      tetrisContainer.style.height = '100%';
+      const tetrisGameEl = tetrisContainer.children[0];
+
+      if (tetrisGameEl) {
+        tetrisGameEl.style.display = 'none';
+      }
+
+      const cWidth = tetrisContainer.clientWidth;
+      const cHeight = tetrisContainer.clientHeight;
+      let h = cHeight - 5;
+      let w = h * .55555;
+
+      if (w > cWidth - 10) {
+        w = cWidth - 10;
+      }
+
+      const blockSize =  Math.floor(w / 10);
+
+      if (!tetris) {
+        const t = new Tetris(tetrisContainer, {
+          initialState: {
+            blockSize,
+            rows,
+            cols,
+          }
+        });
+
+        setTetris(t);
+
+        // t.on('updateStats', e => console.dir(e));
+      } else {
+        tetris.setState({ blockSize });  
+      }
+
+      tetrisContainer.children[0].style.display = 'block';
+      tetrisContainer.style.height = '';
       
       if (matches) {
-        mainGrid.current.style.gridTemplateColumns =
+        mainGridEl.style.gridTemplateColumns =
           `minmax(82px, 1fr) ${blockSize * cols}px minmax(82px, 1fr)`;
-      }
+      }      
+
+      setCalcTetrisLayout(false);
     }
-  }, [tetris, blockSize, cols])
+  }, [tetris, cols, rows, calcTetrisLayout])
 
   const handlePause = () => {
     if (!paused) {
