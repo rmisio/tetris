@@ -7,16 +7,13 @@
   height: 100%;
   margin: 0 auto;
 
-  // @include mq($from: small) {
-  //   margin-top: 20px;
-  //   margin-bottom: 20px;
-  // }
-
   #mainHeader {
     background-color: rgba(0, 0, 0, 0.8);
     padding: 15px 10px;
 
     h1 {
+      font-family: 'retrogaming', sans-serif;
+      font-weight: 600;
       margin: 0;
       line-height: 1;
     }
@@ -54,7 +51,6 @@
 
     #tetris-level {
       grid-area: level;
-      background-color: orange;
     }
 
     #tetris-score {
@@ -86,6 +82,11 @@
         ". tetris ."
         "level tetris score"
         "level tetris high-score";
+      column-gap: 10px;
+
+      #tetris-level {
+        justify-self: end;
+      }
     }
   }
 }

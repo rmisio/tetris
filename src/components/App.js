@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import Tetris from 'lib/tetris/Tetris';
+import Level from './Level';
 import 'styles/main.scss';
 import './App.scss';
 
@@ -116,8 +117,10 @@ function App() {
       <main className="siteWidth" ref={mainGrid}>
         <div id="tetris" />
         <aside id="tetris-level">
-          <h1>Level</h1>
-          <p>3</p>
+          <Level
+            heading='level'
+            level={91}
+          />
         </aside>
         <aside id="tetris-score">
           <h1>Score</h1>
