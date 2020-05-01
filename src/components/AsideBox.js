@@ -8,7 +8,10 @@ function AsideBox(props) {
     ProgressBar =
       <div
         className="AsideBox-progressBar"
-        style={{ width: `${props.progress}%` }}
+        style={{
+          width: `${props.progress}%`,
+          height: `${props.progress}%`,
+        }}
       />;
   }
 

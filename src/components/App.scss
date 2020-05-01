@@ -102,20 +102,37 @@ button, input[type="submit"], input[type="reset"] {
         border: 2px solid rgba(22, 144, 181, 0.25);
         border-top: none;
         box-sizing: border-box;
+
+        @include mq($until: medium) {
+          border-bottom: none;
+        }
       }
     }
 
     #tetris-level {
       grid-area: level;
+
+      @include mq($until: medium) {
+        border-top: 1px solid #0e2c44;
+      }
     }
 
     #tetris-score {
       grid-area: score;
+
+      @include mq($until: medium) {
+        border-top: 1px solid #0e2c44;
+        border-right: 1px solid #0e2c44;
+      }
     }
 
     #tetris-high-score {
       grid-area: high-score;
-      background-color: yellow;
+
+      @include mq($until: medium) {
+        border-top: 1px solid #0e2c44;
+        border-right: 1px solid #0e2c44;
+      }
     }
 
     & > nav {

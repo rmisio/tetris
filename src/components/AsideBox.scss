@@ -1,59 +1,83 @@
+@import '~sass-mq';
 @import 'styles/variables.scss';
 
 .AsideBox {
   position: relative;  
   background-color: rgba(0, 0, 0, 0.85);
-  border-radius: 5px;
   height: 100%;
-  width: 200px;
   display: flex;
   flex-flow: column;
 
+  @include mq($from: medium) {
+    border-radius: 5px;
+    width: 200px;
+  }
+
   h1 {
-    padding: 15px;
-    font-size: 1.22rem;
-    letter-spacing: .015rem;
     text-transform: uppercase;
     line-height: 1;
-    // todo: why is the h1 obscuring the parent border-radius?;
-    border-top-right-radius: 5px;
-    border-top-left-radius: 5px;
-    position: relative;
-    overflow: hidden;
-    margin: 0;
+    position: relative;    
+    margin: 10px auto 3px;
+    font-size: 1.25rem;
 
-    &::after {
-      content: '';
-      position: absolute;
-      height: 3px;
-      width: 100%;
-      top: calc(50% - 2px);
-      background-color: $clrSecondary;
-      margin-left: 15px;
-    }
+    @include mq($from: medium) {
+      padding: 15px;
+      font-size: 1.22rem;
+      letter-spacing: .015rem;
+      margin: 0;
+      overflow: hidden;
+      // todo: why is the h1 obscuring the parent border-radius?;      
+      border-top-right-radius: 5px;
+      border-top-left-radius: 5px;
 
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: url("../img/diag-bg2.png");
-      background-repeat: repeat;
-      opacity: 0.25;
+      &::after {
+        content: '';
+        position: absolute;
+        height: 3px;
+        width: 100%;
+        top: calc(50% - 2px);
+        background-color: $clrSecondary;
+        margin-left: 15px;
+      }
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("../img/diag-bg2.png");
+        background-repeat: repeat;
+        opacity: 0.25;
+      }
     }
   }
 
   .AsideBox-content {
-    padding: 5px 10px;
     flex: 1;
+    padding: 0 10px;
+
+    @include mq($from: medium) {
+      padding: 5px 10px;
+    }    
   }
 
-  // TODO: add diag line texture...?
   .AsideBox-progressBar {
-    height: 10px;
     background-color: $clrSecondary;
-    transition: width 0.6s linear;
+
+    @include mq($until: medium) {
+      width: 10px !important;
+      position: absolute;
+      left: -5px;
+      bottom: 0;
+      transition: height 0.6s linear;
+    }
+
+    // TODO: add diag line texture...?
+    @include mq($from: medium) {
+      height: 10px !important;
+      transition: width 0.6s linear;
+    }    
   }
 }
