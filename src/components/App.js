@@ -19,8 +19,19 @@ function App() {
   const [tetris, setTetris] = useState(null);
   const [playing, setPlaying] = useState(false);
   const [calcTetrisLayout, setCalcTetrisLayout] = useState(true);
+  const [level, setLevel] = useState(1);
+  const [percentToNextLevel, setPercentToNextLevel] = useState(0);
+
+  // todo: instead of these shennanigans, just remove the inline style
+  // to reset it!
   const initialMainGTCMobile = 'repeat(6, 1fr)';
   const initialMainGTCDesktop = 'minmax(82px, 1fr) 2fr minmax(82px, 1fr)';
+
+  const updateStats = e => {
+    console.dir(e);
+    setLevel(e.level);
+    setPercentToNextLevel(e.percentToNextLevel);
+  };
 
   useEffect(() => {
     const onResize = e => {
@@ -37,6 +48,7 @@ function App() {
     // TODO: disable eslint
   }, []);
 
+  // TODO: is useLayoutEffect needed here
   useLayoutEffect(() => {
     const mainGridEl = mainGrid.current;
 
@@ -78,8 +90,7 @@ function App() {
         });
 
         setTetris(t);
-
-        // t.on('updateStats', e => console.dir(e));
+        t.on('updateStats', updateStats);
       } else {
         tetris.setState({ blockSize });  
       }
@@ -136,7 +147,8 @@ function App() {
         <aside id="tetris-level">
           <Level
             heading='level'
-            level={91}
+            level={level}
+            progress={percentToNextLevel}
           />
         </aside>
         <aside id="tetris-score">

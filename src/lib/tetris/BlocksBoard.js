@@ -94,7 +94,7 @@ class BlocksBoard extends BaseVw {
     let row = getRow();
 
     const state = {
-      time: 400,
+      time: 100,
       curBlink:  0,
       start: null,
       stepOut: true,

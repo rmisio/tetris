@@ -44,7 +44,8 @@ class Tetris extends BaseVw {
       gameOver: false,
       activePiece: null,
       lines: 0,
-      level: 1,        
+      level: 1,
+      percentToNextLevel: 0,
       activePieceDropSpeedFactor: 500,
       ...options.initialState,      
     };
@@ -142,6 +143,7 @@ class Tetris extends BaseVw {
       score,
       level,
       activePiece,
+      percentToNextLevel,
     } = this.getState();
 
     // Although not enforced, blockSize is the only state we're potentially
@@ -178,9 +180,15 @@ class Tetris extends BaseVw {
     if (
       prevState.lines !== lines ||
       prevState.score !== score ||
-      prevState.level !== level
+      prevState.level !== level ||
+      prevState.percentToNextLevel != percentToNextLevel
     ) {
-      this.emit('updateStats', { lines, score, level });
+      this.emit('updateStats', {
+        lines,
+        score,
+        level,
+        percentToNextLevel,
+      });
     }
 
     return this;
@@ -441,16 +449,23 @@ class Tetris extends BaseVw {
         Promise
           .all(this._lineRemovals.map(l => l.promise))
           .then(() => {
+            const {
+              level,
+              lines: prevLineCount,
+            } = this.getState();
             updatedBlocks = [
               ...lines.map(line => Array(cols).fill(null)),
               ...updatedBlocks.filter((row, rowIndex) => !lines.includes(rowIndex))
             ];
             this
               .blocksBoard
-              .setState({ blocks: updatedBlocks });            
+              .setState({ blocks: updatedBlocks });
+            const newLineCount = (prevLineCount || 0) + lines.length;
             this.setState({
-              lines: lines.length,
-              score: this.computeScore(lines.length, this.getState().level),
+              lines: newLineCount,
+              score: this.computeScore(lines.length, level),
+              level: Math.floor(newLineCount / 10) + 1,
+              percentToNextLevel: (newLineCount % 10) * 10,
             });
             this._lineRemovals = [];
             this.dropNewPiece();

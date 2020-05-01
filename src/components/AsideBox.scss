@@ -54,6 +54,7 @@
   // TODO: add diag line texture...?
   .AsideBox-progressBar {
     height: 10px;
-    background-color: $clrSecondary;;
+    background-color: $clrSecondary;
+    transition: width 0.6s linear;
   }
 }
