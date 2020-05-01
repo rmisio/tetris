@@ -1,4 +1,12 @@
-import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
+import React, {
+  useRef,
+  useEffect,
+  useLayoutEffect,
+  useState
+} from 'react';
+import IosPlay from 'react-ionicons/lib/IosPlay';
+import IosRefresh from 'react-ionicons/lib/IosRefresh';
+import IosPause from 'react-ionicons/lib/IosPause';
 import Tetris from 'lib/tetris/Tetris';
 import Level from './Level';
 import 'styles/main.scss';
@@ -9,7 +17,7 @@ function App() {
   const [rows] = useState(18);
   const [cols] = useState(10);
   const [tetris, setTetris] = useState(null);
-  const [paused, setPaused] = useState(false);
+  const [playing, setPlaying] = useState(false);
   const [calcTetrisLayout, setCalcTetrisLayout] = useState(true);
   const initialMainGTCMobile = 'repeat(6, 1fr)';
   const initialMainGTCDesktop = 'minmax(82px, 1fr) 2fr minmax(82px, 1fr)';
@@ -89,29 +97,38 @@ function App() {
   }, [tetris, cols, rows, calcTetrisLayout])
 
   const handlePause = () => {
-    if (!paused) {
-      setPaused(true);
+    if (tetris && playing) {
+      setPlaying(false);
       tetris.stop();
     }
   };
 
-  const handleStart = () => {
-    if (paused) {
-      setPaused(false);
+  const handlePlay = () => {
+    if (tetris && !playing) {
+      setPlaying(true);
       tetris.start();
     }
   };
 
-  const ControlBtn =
-    paused ?
-      <button onClick={handleStart}>Start</button> :
-      <button onClick={handlePause}>Pause</button>;
+  const PausePlay = playing ?
+    <button className="btnPlayPause" onClick={handlePause}>
+      <IosPause fontSize="1.1rem" />
+    </button> :
+    <button className="btnPlay btnPlayPause" onClick={handlePlay}>
+      <IosPlay fontSize="1.1rem" />
+    </button>    
 
   return (
     <div className="App">
       <header id="mainHeader">
         <div className="siteWidth">
           <h1>Tetris</h1>
+          <nav>
+            {PausePlay}
+            <button>
+              <IosRefresh fontSize="1.3rem" />
+            </button>
+          </nav>          
         </div>
       </header>
       <main className="siteWidth" ref={mainGrid}>

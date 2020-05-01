@@ -1,6 +1,16 @@
 @import '~sass-mq';
 @import 'styles/variables.scss';
 
+button, input[type="submit"], input[type="reset"] {
+  background: none;
+  color: inherit;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
+}
+
 .App {
   display: grid;
   grid-template-rows: fit-content(500px) auto;
@@ -11,15 +21,60 @@
     background-color: rgba(0, 0, 0, 0.8);
     padding: 15px 10px;
 
-    h1 {
-      font-family: 'retrogaming', sans-serif;
-      font-weight: 600;
-      margin: 0;
-      line-height: 1;
-    }
-
     @include mq($from: medium) {
       padding: 20px 0;
+    }    
+    
+    & > div {
+      display: flex;
+
+      h1 {
+        font-family: 'retrogaming', sans-serif;
+        font-weight: 600;
+        margin: 0;
+        line-height: 1;
+        flex: 1;
+      }
+
+      nav {
+        display: flex;
+
+        & > button {
+          margin-right: 5px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: fill 0.6s linear;
+
+          svg {
+            fill: $clrTx;
+
+            &:hover {
+              fill: #FFF;
+            }
+          }
+        }
+
+        .btnPlayPause {
+          width: 25px;
+          height: 25px;
+
+          &.btnPlay {
+            border: 1px solid $clrTx;
+            border-radius: 50%;
+            transition: border 0.6s linear;
+
+            svg {
+              position: relative;
+              left: 1px;
+            }
+
+            &:hover {
+              border-color: #fff;
+            }
+          }
+        }
+      }
     }
   }
 
