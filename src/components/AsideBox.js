@@ -4,7 +4,7 @@ import './AsideBox.scss';
 function AsideBox(props) {
   let ProgressBar = null;
 
-  if (Number.isInteger(props.progress)) {
+  if (typeof props.progress === 'number') {
     ProgressBar =
       <div
         className="AsideBox-progressBar"

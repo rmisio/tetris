@@ -1,0 +1,53 @@
+.Score {
+  .AsideBox-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    .Score-score {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2.8rem;
+      flex: 1;
+
+      &.Score-scoreLenLong {
+        font-size: 2.2rem
+      }
+
+      &.Score-scoreLenSuperLong {
+        font-size: 1.6rem
+      }
+
+      &.Score-scoreLenCrazyAssLong {
+        font-size: 1rem 
+      }      
+    }
+
+    .Score-highScoreWrap {
+      display: flex;
+
+      & > div {
+        &:first-child {
+          flex: 1;
+        }
+
+        &:last-child {
+          align-self: center;
+        }
+      }
+
+      &.Score-highScoreLenLong div:last-child {
+        font-size: 0.8rem;
+      }      
+
+      &.Score-highScoreLenSuperLong {
+        flex-direction: column;
+
+        & > div:last-child {
+          align-self: start;
+        }
+      }
+    }
+  }
+}

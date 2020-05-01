@@ -45,6 +45,7 @@ class Tetris extends BaseVw {
       activePiece: null,
       lines: 0,
       level: 1,
+      score: 0,
       percentToNextLevel: 0,
       activePieceDropSpeedFactor: 500,
       ...options.initialState,      
@@ -353,7 +354,7 @@ class Tetris extends BaseVw {
 
   // todo: I am memoizable
   computeScore(lineCount, level) {
-    return (50 * level) + ((lineCount - 1) * 10);
+    return (10 * level) + ((lineCount - 1) * (5 * level));
   }
 
   rafTick() {
@@ -451,6 +452,7 @@ class Tetris extends BaseVw {
           .then(() => {
             const {
               level,
+              score,
               lines: prevLineCount,
             } = this.getState();
             updatedBlocks = [
@@ -463,7 +465,7 @@ class Tetris extends BaseVw {
             const newLineCount = (prevLineCount || 0) + lines.length;
             this.setState({
               lines: newLineCount,
-              score: this.computeScore(lines.length, level),
+              score: score + this.computeScore(lines.length, level),
               level: Math.floor(newLineCount / 10) + 1,
               percentToNextLevel: (newLineCount % 10) * 10,
             });

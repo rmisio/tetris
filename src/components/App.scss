@@ -111,7 +111,6 @@ button, input[type="submit"], input[type="reset"] {
 
     #tetris-score {
       grid-area: score;
-      background-color: green;
     }
 
     #tetris-high-score {
@@ -137,11 +136,15 @@ button, input[type="submit"], input[type="reset"] {
         ". tetris ."
         ". tetris ."
         "level tetris score"
-        "level tetris high-score";
+        "level tetris score";
       column-gap: 10px;
 
       #tetris-level {
         justify-self: end;
+      }
+
+      #tetris-high-score {
+        display: none;
       }
     }
   }

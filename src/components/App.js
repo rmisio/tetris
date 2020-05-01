@@ -9,6 +9,7 @@ import IosRefresh from 'react-ionicons/lib/IosRefresh';
 import IosPause from 'react-ionicons/lib/IosPause';
 import Tetris from 'lib/tetris/Tetris';
 import Level from './Level';
+import Score from './Score';
 import 'styles/main.scss';
 import './App.scss';
 
@@ -21,6 +22,8 @@ function App() {
   const [calcTetrisLayout, setCalcTetrisLayout] = useState(true);
   const [level, setLevel] = useState(1);
   const [percentToNextLevel, setPercentToNextLevel] = useState(0);
+  const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(localStorage.getItem('highScore') || 0);
 
   // todo: instead of these shennanigans, just remove the inline style
   // to reset it!
@@ -31,6 +34,12 @@ function App() {
     console.dir(e);
     setLevel(e.level);
     setPercentToNextLevel(e.percentToNextLevel);
+    setScore(e.score);
+
+    if (e.score > highScore) {
+      setHighScore(e.score);
+      localStorage.setItem('highScore', e.score);
+    }
   };
 
   useEffect(() => {
@@ -146,14 +155,18 @@ function App() {
         <div id="tetris" />
         <aside id="tetris-level">
           <Level
-            heading='level'
+            heading='Level'
             level={level}
             progress={percentToNextLevel}
           />
         </aside>
         <aside id="tetris-score">
-          <h1>Score</h1>
-          <p>1,367</p>
+          <Score
+            heading='Score'
+            score={score}
+            highScore={highScore}
+            progress={((score / highScore) || 0) * 100}
+          />  
         </aside>
         <aside id="tetris-high-score">
           <h1>High Score</h1>
