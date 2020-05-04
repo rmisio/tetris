@@ -52,3 +52,28 @@ h1, h2, h3, h4, h5, h6 {
 h1 {
   font-size: 1.5rem;
 }
+
+button, input[type="submit"], input[type="reset"] {
+  background: none;
+  color: inherit;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
+}
+
+.iconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: fill 0.6s linear;
+
+  svg {
+    fill: $clrTx;
+
+    &:hover {
+      fill: #FFF;
+    }
+  }
+}

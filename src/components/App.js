@@ -24,6 +24,7 @@ function App() {
   const [percentToNextLevel, setPercentToNextLevel] = useState(0);
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(localStorage.getItem('highScore') || 0);
+  const [showHelp, setShowHelp] = useState(true);
 
   // todo: instead of these shennanigans, just remove the inline style
   // to reset it!
@@ -131,12 +132,12 @@ function App() {
   };
 
   const PausePlay = playing ?
-    <button className="btnPlayPause" onClick={handlePause}>
+    <button className="btnPlayPause iconBtn" onClick={handlePause}>
       <IosPause fontSize="1.1rem" />
     </button> :
-    <button className="btnPlay btnPlayPause" onClick={handlePlay}>
+    <button className="btnPlay btnPlayPause iconBtn" onClick={handlePlay}>
       <IosPlay fontSize="1.1rem" />
-    </button>    
+    </button>;
 
   return (
     <div className="App">
@@ -145,7 +146,7 @@ function App() {
           <h1>Tetris</h1>
           <nav>
             {PausePlay}
-            <button>
+            <button className="iconBtn">
               <IosRefresh fontSize="1.3rem" />
             </button>
           </nav>          
