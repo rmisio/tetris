@@ -37,10 +37,11 @@ button, input[type="submit"], input[type="reset"] {
       }
 
       nav {
+        // TODO: increase size on mobile;
         display: flex;
 
         & > button {
-          margin-right: 5px;
+          margin-right: 7px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -81,15 +82,13 @@ button, input[type="submit"], input[type="reset"] {
   main {
     height: 100%;
     width: 100%;
-    box-sizing: border-box;
     overflow: hidden;
     display: grid;
-    grid-template-rows: 1fr 80px 40px;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: 1fr 80px;
+    grid-template-columns: repeat(3, 1fr);
     grid-template-areas:
-      "tetris tetris tetris tetris tetris tetris"
-      "high-score high-score score score level level"
-      "nav nav nav nav nav nav";
+      "tetris tetris tetris"
+      "high-score score level";
     
     #tetris {
       grid-area: tetris;
@@ -101,7 +100,6 @@ button, input[type="submit"], input[type="reset"] {
         background-color: #000;
         border: 2px solid rgba(22, 144, 181, 0.25);
         border-top: none;
-        box-sizing: border-box;
 
         @include mq($until: medium) {
           border-bottom: none;
@@ -111,28 +109,14 @@ button, input[type="submit"], input[type="reset"] {
 
     #tetris-level {
       grid-area: level;
-
-      @include mq($until: medium) {
-        border-top: 1px solid #0e2c44;
-      }
     }
 
     #tetris-score {
       grid-area: score;
-
-      @include mq($until: medium) {
-        border-top: 1px solid #0e2c44;
-        border-right: 1px solid #0e2c44;
-      }
     }
 
     #tetris-high-score {
       grid-area: high-score;
-
-      @include mq($until: medium) {
-        border-top: 1px solid #0e2c44;
-        border-right: 1px solid #0e2c44;
-      }
     }
 
     & > nav {

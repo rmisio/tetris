@@ -8,6 +8,10 @@
   display: flex;
   flex-flow: column;
 
+  @include mq($until: medium) {
+    border-top: 1px solid $clrBorder;
+  }
+
   @include mq($from: medium) {
     border-radius: 5px;
     width: 200px;
@@ -56,11 +60,34 @@
 
   .AsideBox-content {
     flex: 1;
-    padding: 0 10px;
+    padding: 0 10px 10px;
 
     @include mq($from: medium) {
       padding: 5px 10px;
-    }    
+    }
+
+    @include mq($until: medium) {
+      &::after {
+        content: '';
+        width: 1px;
+        background-color: $clrBorder;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: -6px;
+        z-index: 1;
+      }
+
+      &::before {
+        content: '';
+        width: 1px;
+        background-color: $clrBorder;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 5px;
+      }
+    }
   }
 
   .AsideBox-progressBar {
@@ -72,6 +99,11 @@
       left: -5px;
       bottom: 0;
       transition: height 0.6s linear;
+      z-index: 1;
+
+      // height: 100%;
+      // border-left: 1px solid $clrBorder;
+      // border-right: 1px solid $clrBorder;
     }
 
     // TODO: add diag line texture...?

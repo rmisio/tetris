@@ -27,7 +27,7 @@ function App() {
 
   // todo: instead of these shennanigans, just remove the inline style
   // to reset it!
-  const initialMainGTCMobile = 'repeat(6, 1fr)';
+  const initialMainGTCMobile = 'repeat(3, 1fr)';
   const initialMainGTCDesktop = 'minmax(82px, 1fr) 2fr minmax(82px, 1fr)';
 
   const updateStats = e => {
@@ -166,11 +166,14 @@ function App() {
             score={score}
             highScore={highScore}
             progress={((score / highScore) || 0) * 100}
-          />  
+          />
         </aside>
         <aside id="tetris-high-score">
-          <h1>High Score</h1>
-          <p>9,843</p>
+          <Score
+            heading='High Score'
+            score={highScore}
+            highScore={highScore}
+          />
         </aside>
         <nav>
           <p style={{ width: '50%', height: '100%', backgroundColor: 'orange', float: 'left' }}></p>

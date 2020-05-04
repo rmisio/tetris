@@ -1,9 +1,18 @@
+@import '~sass-mq';
+@import 'styles/variables.scss';
+
 .Level {
   .Level-count {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100%;
-    font-size: 3rem;
+    font-size: 1.7rem;
+  }
+
+  @include mq($from: medium) {
+    .Level-count {
+      font-size: 3rem;
+    }    
   }
 }

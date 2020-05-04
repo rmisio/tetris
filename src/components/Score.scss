@@ -8,6 +8,7 @@
       justify-content: center;
       align-items: center;
       font-size: 1.7rem;
+      height: 100%;
 
       &.Score-scoreLenCrazyAssLong {
         font-size: 1.2rem 
@@ -71,5 +72,13 @@
         }
       }
     }    
+  }
+}
+
+#tetris-high-score {
+  .Score .AsideBox-content {
+    &::after, &::before {
+      display: none;
+    }
   }
 }
