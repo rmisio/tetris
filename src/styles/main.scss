@@ -5,8 +5,15 @@
 html {
   box-sizing: border-box;
 }
+
 *, *:before, *:after {
   box-sizing: inherit;
+}
+
+ul.unstyled {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .siteWidth {
@@ -43,6 +50,10 @@ body {
 
 #root { height: 100%; }
 
+#mainWrap {
+  position: relative;
+}
+
 h1, h2, h3, h4, h5, h6 {
   font-family: 'montserrat', sans-serif;
   font-weight: 600;
@@ -61,6 +72,18 @@ button, input[type="submit"], input[type="reset"] {
   font: inherit;
   cursor: pointer;
   outline: inherit;
+}
+
+.btn {
+  border: 1px solid $clrBorder;
+  padding: 10px 15px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: $clrTx;
+    background-color: #fff;
+    color: #000;
+  }
 }
 
 .iconBtn {

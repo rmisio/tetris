@@ -7,13 +7,17 @@ import React, {
 import IosPlay from 'react-ionicons/lib/IosPlay';
 import IosRefresh from 'react-ionicons/lib/IosRefresh';
 import IosPause from 'react-ionicons/lib/IosPause';
+import IosHelp from 'react-ionicons/lib/IosHelp';
 import Tetris from 'lib/tetris/Tetris';
+import MyModal from 'components/MyModal';
 import Level from './Level';
 import Score from './Score';
+import Help from './Help';
 import 'styles/main.scss';
 import './App.scss';
 
 function App() {
+  const mainWrap = useRef(null);
   const mainGrid = useRef(null);
   const [rows] = useState(18);
   const [cols] = useState(10);
@@ -25,6 +29,8 @@ function App() {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(localStorage.getItem('highScore') || 0);
   const [showHelp, setShowHelp] = useState(true);
+
+  const touchEnabled = 'ontouchstart' in document.documentElement;
 
   // todo: instead of these shennanigans, just remove the inline style
   // to reset it!
@@ -115,7 +121,27 @@ function App() {
 
       setCalcTetrisLayout(false);
     }
-  }, [tetris, cols, rows, calcTetrisLayout])
+  }, [tetris, cols, rows, calcTetrisLayout]);
+
+  useEffect(() => {
+    if (playing) {
+      setShowHelp(false);
+    }
+  }, [playing]);
+
+  useEffect(() => {
+    if (tetris && showHelp) {
+      tetris.stop();
+      setPlaying(false);
+    }
+  }, [showHelp, tetris]);
+
+  const startTetris = () => {
+    if (tetris && !playing) {
+      tetris.start();
+      setPlaying(true);
+    }
+  }
 
   const handlePause = () => {
     if (tetris && playing) {
@@ -124,63 +150,83 @@ function App() {
     }
   };
 
-  const handlePlay = () => {
-    if (tetris && !playing) {
-      setPlaying(true);
-      tetris.start();
-    }
-  };
-
   const PausePlay = playing ?
     <button className="btnPlayPause iconBtn" onClick={handlePause}>
-      <IosPause fontSize="1.1rem" />
+      <IosPause fontSize="1.3rem" />
     </button> :
-    <button className="btnPlay btnPlayPause iconBtn" onClick={handlePlay}>
-      <IosPlay fontSize="1.1rem" />
+    <button
+      className="btnPlay btnPlayPause iconBtn"
+      onClick={() => startTetris()}
+    >
+      <IosPlay fontSize="1.3rem" />
     </button>;
 
+  const HelpScreen = (
+    <MyModal
+      isOpen={showHelp}
+      parentSelector={() => mainWrap.current}
+      shouldCloseOnEsc={true}
+      onAfterClose={() => setShowHelp(false)}
+    >
+      <Help
+        activeGame={playing}
+        touchDevice={touchEnabled}
+        onStartClick={() => startTetris()}
+      ></Help>      
+    </MyModal>    
+  );
+
   return (
-    <div className="App">
+    <div className={`App ${touchEnabled ? 'touchEnabled' : ''}`}>
       <header id="mainHeader">
         <div className="siteWidth">
           <h1>Tetris</h1>
           <nav>
             {PausePlay}
             <button className="iconBtn">
-              <IosRefresh fontSize="1.3rem" />
+              <IosRefresh fontSize="1.5rem" />
+            </button>
+            <button
+              className={`iconBtn btnHelp ${showHelp ? 'active' : ''}`}
+              onClick={() => setShowHelp(true)}
+            >
+              <IosHelp fontSize="1.8rem" />
             </button>
           </nav>          
         </div>
       </header>
-      <main className="siteWidth" ref={mainGrid}>
-        <div id="tetris" />
-        <aside id="tetris-level">
-          <Level
-            heading='Level'
-            level={level}
-            progress={percentToNextLevel}
-          />
-        </aside>
-        <aside id="tetris-score">
-          <Score
-            heading='Score'
-            score={score}
-            highScore={highScore}
-            progress={((score / highScore) || 0) * 100}
-          />
-        </aside>
-        <aside id="tetris-high-score">
-          <Score
-            heading='High Score'
-            score={highScore}
-            highScore={highScore}
-          />
-        </aside>
-        <nav>
-          <p style={{ width: '50%', height: '100%', backgroundColor: 'orange', float: 'left' }}></p>
-          <p style={{ width: '50%', height: '100%', backgroundColor: 'green', float: 'left' }}></p>
-        </nav>
-      </main>
+      <div id="mainWrap" ref={mainWrap}>
+        <main className="siteWidth" ref={mainGrid}>
+          <div id="tetris" />
+          <aside id="tetris-level">
+            <Level
+              heading='Level'
+              level={level}
+              progress={percentToNextLevel}
+            />
+          </aside>
+          <aside id="tetris-score">
+            <Score
+              heading='Score'
+              score={score}
+              highScore={highScore}
+              progress={((score / highScore) || 0) * 100}
+            />
+          </aside>
+          <aside id="tetris-high-score">
+            <Score
+              heading='High Score'
+              score={highScore}
+              highScore={highScore}
+            />
+          </aside>
+          <nav>
+            <p style={{ width: '50%', height: '100%', backgroundColor: 'orange', float: 'left' }}></p>
+            <p style={{ width: '50%', height: '100%', backgroundColor: 'green', float: 'left' }}></p>
+          </nav>
+        </main>
+      </div>
+      {HelpScreen}
     </div>
   );
 }

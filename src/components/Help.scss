@@ -1,1 +1,31 @@
+@import '~sass-mq';
+@import 'styles/variables.scss';
 
+.Help {
+  .Help-instructions {
+    ul {
+      margin-bottom: 20px;
+
+      li {
+        display: flex;
+        align-items: center;
+
+        & >:first-child {
+          display: flex;
+          align-items: center;
+          padding-right: 10px;
+
+          .touchEnabled & {
+            width: 125px;
+          }          
+
+          svg {
+            fill: $clrTx;
+            width: 40px;
+            height: 40px;
+          }
+        }
+      }
+    }
+  }
+}

@@ -13,7 +13,7 @@
 
     @include mq($from: medium) {
       padding: 20px 0;
-    }    
+    }
     
     & > div {
       display: flex;
@@ -24,6 +24,8 @@
         margin: 0;
         line-height: 1;
         flex: 1;
+        display: flex;
+        align-self: center;
       }
 
       nav {
@@ -44,11 +46,15 @@
               fill: #FFF;
             }
           }
+
+          &.active svg {
+            fill: #fff;
+          }
         }
 
         .btnPlayPause {
-          width: 25px;
-          height: 25px;
+          width: 33px;
+          height: 33px;
 
           &.btnPlay {
             border: 1px solid $clrTx;
@@ -64,6 +70,12 @@
               border-color: #fff;
             }
           }
+        }
+
+        // todo: come up with better way to align buttons
+        .btnHelp {
+          position: relative;
+          right: 8px;
         }
       }
     }
