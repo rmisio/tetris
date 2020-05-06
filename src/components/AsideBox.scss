@@ -8,6 +8,11 @@
   display: flex;
   flex-flow: column;
 
+  // TODO: on smalles widths make sure font sizes don't break;
+  // try large number high score and score
+  // TODO: on landscape mobile (i.e. small height), reduce height
+  // of the aside box bar;
+
   @include mq($until: medium) {
     border-top: 1px solid $clrBorder;
   }
@@ -22,7 +27,7 @@
     line-height: 1;
     position: relative;    
     margin: 10px auto 3px;
-    font-size: 1.25rem;
+    font-size: 0.9rem;
 
     @include mq($from: medium) {
       padding: 15px;

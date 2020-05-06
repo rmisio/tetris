@@ -1,6 +1,8 @@
 @import '~sass-mq';
 @import 'styles/variables.scss';
 
+// TODO: check me on smalles sizes. Probably need an auto inner scroll bar;
+
 .MyModal-overlay {
   background-color: rgba(0, 0, 0, 0.75);
   position: absolute;
