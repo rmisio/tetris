@@ -6,12 +6,6 @@ import MdArrowDropupCircle from 'react-ionicons/lib/MdArrowDropupCircle';
 import './Help.scss';
 
 function Help(props) {
-  const startBtn = (
-    <button className="btn" onClick={props.onStartClick}>
-      {props.activeGame ? 'Resume Game' : 'Start Game'}
-    </button>
-  );
-
   let Instructions = (
     <React.Fragment>
       <div className="Help-instructions">
@@ -91,7 +85,9 @@ function Help(props) {
     <section className="Help">
       <h1>How To Play</h1>
       {Instructions}
-      <div>{startBtn}</div>
+      <button className="btn" onClick={props.onStartClick}>
+        Play Game
+      </button>
     </section>
   );
 }

@@ -78,6 +78,7 @@ button, input[type="submit"], input[type="reset"] {
   border: 1px solid $clrBorder;
   padding: 10px 15px;
   transition: all 0.3s ease;
+  text-transform: uppercase;
 
   &:hover {
     background-color: $clrTx;
