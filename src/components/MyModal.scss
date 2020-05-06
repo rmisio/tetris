@@ -3,7 +3,7 @@
 
 // TODO: check me on smalles sizes. Probably need an auto inner scroll bar;
 
-.MyModal-overlay {
+.MyModal-overlay, .TextOverlay-overlay {
   background-color: rgba(0, 0, 0, 0.75);
   position: absolute;
   top: 0;

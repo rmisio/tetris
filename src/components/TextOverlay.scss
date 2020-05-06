@@ -1,0 +1,23 @@
+.TextOverlay {
+  z-index: 1;
+  color: #fff;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+
+  .TextOverlay-text {
+    font-family: 'retrogaming', sans-serif;
+    font-weight: 600;
+    font-size: 3rem;
+  }
+}
+
+.ReactModal__Body--open .TextOverlay-overlay {
+  background-color: rgba(0, 0, 0, 0);
+}

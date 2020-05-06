@@ -10,6 +10,7 @@ import IosPause from 'react-ionicons/lib/IosPause';
 import IosHelp from 'react-ionicons/lib/IosHelp';
 import Tetris from 'lib/tetris/Tetris';
 import MyModal from 'components/MyModal';
+import TextOverlay from './TextOverlay';
 import Level from './Level';
 import Score from './Score';
 import Help from './Help';
@@ -23,6 +24,7 @@ function App() {
   const [cols] = useState(10);
   const [tetris, setTetris] = useState(null);
   const [playing, setPlaying] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
   const [calcTetrisLayout, setCalcTetrisLayout] = useState(true);
   const [level, setLevel] = useState(1);
   const [percentToNextLevel, setPercentToNextLevel] = useState(0);
@@ -151,14 +153,14 @@ function App() {
   };
 
   const PausePlay = playing ?
-    <button className="btnPlayPause iconBtn" onClick={handlePause}>
-      <IosPause fontSize="1.3rem" />
+    <button className="iconBtn btnPause" onClick={handlePause}>
+      <IosPause />
     </button> :
     <button
-      className="btnPlay btnPlayPause iconBtn"
+      className="iconBtn btnPlay"
       onClick={() => startTetris()}
     >
-      <IosPlay fontSize="1.3rem" />
+      <IosPlay />
     </button>;
 
   const HelpScreen = (
@@ -173,8 +175,18 @@ function App() {
         touchDevice={touchEnabled}
         onStartClick={() => startTetris()}
       ></Help>      
-    </MyModal>    
+    </MyModal>
   );
+
+  const GameOver = gameOver ?
+    (
+      <TextOverlay
+        isOpen={true}
+        parentSelector={() => mainWrap.current}
+      >
+        Game Over
+      </TextOverlay>
+    ) : null;
 
   return (
     <div className={`App ${touchEnabled ? 'touchEnabled' : ''}`}>
@@ -183,7 +195,7 @@ function App() {
           <h1>Tetris</h1>
           <nav>
             {PausePlay}
-            <button className="iconBtn">
+            <button className="iconBtn btnRefresh">
               <IosRefresh fontSize="1.5rem" />
             </button>
             <button
@@ -226,7 +238,8 @@ function App() {
           </nav>
         </main>
       </div>
-      {HelpScreen}
+      {GameOver}
+      {HelpScreen}      
     </div>
   );
 }
