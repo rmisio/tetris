@@ -9,6 +9,7 @@
     "events": "^3.1.0",
     "lodash": "^4.17.15",
     "node-sass": "^4.14.0",
+    "npm-run-all": "^4.1.5",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-ionicons": "^3.1.4",
@@ -21,7 +22,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "surge": "surge build --domain https://tetris-pickles.surge.sh",
+    "deploy": "npm-run-all build surge"    
   },
   "eslintConfig": {
     "extends": "react-app"
