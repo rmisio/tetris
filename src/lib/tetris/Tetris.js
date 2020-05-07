@@ -128,8 +128,13 @@ class Tetris extends BaseVw {
 
   setState(state = {}, options = {}) {
     const prevState = this.getState();
+    const updatedState = state;
 
-    super.setState(state, {
+    if (updatedState.gameOver === true) {
+      updatedState.started = false;
+    }
+
+    super.setState(updatedState, {
       ...options,
       // todo: test me
       renderOnChange: false,
@@ -146,6 +151,8 @@ class Tetris extends BaseVw {
       level,
       activePiece,
       percentToNextLevel,
+      gameOver,
+      started,
     } = this.getState();
 
     // Although not enforced, blockSize is the only state we're potentially
@@ -183,13 +190,17 @@ class Tetris extends BaseVw {
       prevState.lines !== lines ||
       prevState.score !== score ||
       prevState.level !== level ||
-      prevState.percentToNextLevel !== percentToNextLevel
+      prevState.percentToNextLevel !== percentToNextLevel ||
+      prevState.gameOver !== gameOver ||
+      prevState.started !== started
     ) {
-      this.emit('updateStats', {
+      this.emit('change', {
         lines,
         score,
         level,
         percentToNextLevel,
+        gameOver,
+        started,
       });
     }
 
@@ -436,6 +447,7 @@ class Tetris extends BaseVw {
     );
 
     if (boardGameOver) {
+      this.setState({ gameOver: boardGameOver });
       return;
     }
 
@@ -585,13 +597,40 @@ class Tetris extends BaseVw {
     this.rafTick();
   }
 
+  restart() {
+    const {
+      rows,
+      cols,
+    } = this.getState();
+
+    this.setState({
+      started: true,
+      lines: 0,
+      score: 0,
+      level: 1,
+      percentToNextLevel: 0,
+      gameOver: false,
+      activePiece: null,
+    });
+
+    this
+      .blocksBoard
+      .setState({ blocks:  Array(rows).fill(Array(cols).fill(null))});
+
+    this.rafTick();
+  }
+
   start() {
     const {
       started,
       gameOver,
     } = this.getState();
 
-    if (!started && !gameOver) {
+    if (started) return;
+
+    if (gameOver) {
+      this.restart();
+    } else {
       this.setState({ started: true });
       this.rafTick();
     }

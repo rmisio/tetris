@@ -34,16 +34,12 @@ function App() {
 
   const touchEnabled = 'ontouchstart' in document.documentElement;
 
-  // todo: instead of these shennanigans, just remove the inline style
-  // to reset it!
-  const initialMainGTCMobile = 'repeat(3, 1fr)';
-  const initialMainGTCDesktop = 'minmax(82px, 1fr) 2fr minmax(82px, 1fr)';
-
-  const updateStats = e => {
-    console.dir(e);
+  const tetrisChange = e => {
     setLevel(e.level);
     setPercentToNextLevel(e.percentToNextLevel);
     setScore(e.score);
+    setGameOver(e.gameOver);
+    setPlaying(e.started);
 
     if (e.score > highScore) {
       setHighScore(e.score);
@@ -75,9 +71,7 @@ function App() {
       const tetrisContainer = mainGrid.current.children[0];
 
       if (matches) {
-        mainGrid.current.style.gridTemplateColumns = initialMainGTCDesktop;
-      } else {
-        mainGrid.current.style.gridTemplateColumns = initialMainGTCMobile;
+        mainGrid.current.style.gridTemplateColumns = '';
       }
 
       tetrisContainer.style.height = '100%';
@@ -108,7 +102,7 @@ function App() {
         });
 
         setTetris(t);
-        t.on('updateStats', updateStats);
+        t.on('change', tetrisChange);
       } else {
         tetris.setState({ blockSize });  
       }
@@ -134,20 +128,22 @@ function App() {
   useEffect(() => {
     if (tetris && showHelp) {
       tetris.stop();
-      setPlaying(false);
     }
   }, [showHelp, tetris]);
+
+  useEffect(() => {
+    if (gameOver) {
+    }
+  }, [gameOver]);
 
   const startTetris = () => {
     if (tetris && !playing) {
       tetris.start();
-      setPlaying(true);
     }
   }
 
   const handlePause = () => {
     if (tetris && playing) {
-      setPlaying(false);
       tetris.stop();
     }
   };
@@ -162,6 +158,12 @@ function App() {
     >
       <IosPlay />
     </button>;
+
+  const handleRestart = () => {
+    if (tetris) {
+      tetris.restart();
+    }
+  };
 
   const HelpScreen = (
     <MyModal
@@ -195,7 +197,10 @@ function App() {
           <h1>Tetris</h1>
           <nav>
             {PausePlay}
-            <button className="iconBtn btnRefresh">
+            <button
+              className="iconBtn btnRestart"
+              onClick={handleRestart}
+            >
               <IosRefresh fontSize="1.5rem" />
             </button>
             <button
