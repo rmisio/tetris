@@ -51,39 +51,18 @@ class Tetris extends BaseVw {
       ...options.initialState,      
     };
 
-    // todo: validate me. Empty cells must be null.
-    initialState.initialBlocks = [
-      [null, null, null, null, null, null, null, null, null, null],
-      [null, null, null, null, null, null, null, null, null, null],
-      [null, null, null, null, null, null, null, null, null, null],
-      [null, null, null, null, null, null, null, null, null, null],
-      [null, null, null, null, null, null, null, null, null, null],
-      [null, null, null, null, null, null, null, null, null, null],
-      [null, null, null, null, null, null, null, null, null, null],
-      [null, null, null, null, null, null, null, null, null, null],
-      [null, null, null, null, null, null, null, null, null, null],
-      [null, null, null, null, null, null, null, null, null, null],
-      [null, null, null, null, null, null, null, null, null, null],
-      [null, null, null, null, null, null, null, null, null, null],
-      [null, { color: '#42f557' }, null, null, null, null, null, null, null, null],
-      [null, { color: '#42f557' }, null, null, null, null, null, null, null, null],
-      [null, { color: '#42f557' }, null, null, null, null, null, null, null, null],
-      [null, { color: '#42f557' }, null, null, null, null, null, null, null, null],
-      [
-        { color: '#42f557' },
-        { color: '#42f557' },
-        { color: '#42f557' },
-        null,
-        null, null, null, null, null, null
-      ],
-      [
-        { color: '#42c8f5' },
-        { color: '#42c8f5' },
-        { color: '#42c8f5' },
-        { color: '#42c8f5' },
-        null, null, null, null, null, null
-      ],
-    ];
+    // Example initial blocks
+    // initialState.initialBlocks = [
+    //   [null, null, null, null, null, null, null, null, null, null],
+    //   ... (length needs to match rows and cols)
+    //   [null, { color: '#42f557' }, null, null, null, null, null, null, null, null],
+    // ];
+
+    initialState.initialBlocks =
+      Array(initialState.rows)
+        .fill(
+          Array(initialState.cols).fill(null)
+        );
 
     super({ initialState });
 
@@ -225,12 +204,7 @@ class Tetris extends BaseVw {
   // TODO: write unit test
   // TODO: doc me up
   checkBoard(shape, pos) {
-    // console.log(shape);
-    // console.log(pos);
-
     // todo: check shape args
-    // todo: is piece meta needed anymore?
-
     if (
       !Array.isArray(pos) ||
       !Number.isInteger(pos[0]) ||
@@ -441,22 +415,20 @@ class Tetris extends BaseVw {
 
   tick(timestamp) {
     const { tickSpeed } = this.getState();
-    this._tickStart = this._tickStart || timestamp;
 
-    // console.log(`tick: ${timestamp} - ${this._tickStart}`);
-    if (timestamp - this._tickStart < tickSpeed) {
-      // console.log('tock');
-      this.rafTick();
-      return;
+    if (this._tickStart) {
+      if (timestamp - this._tickStart < tickSpeed) {
+        this.rafTick();
+        return;
+      }
     }
 
-    this._tickStart = null;
+    this._tickStart = timestamp;
 
     const {
       started,
       gameOver,
       activePiece,
-      level,
     } = this.getState();
 
     if (!started || gameOver) return;
@@ -569,7 +541,7 @@ class Tetris extends BaseVw {
 
     this.activePieceContainer.setState({ position: [curPos[0], curPos[1] + 1] });
 
-    this.startTick();
+    this.rafTick();
   }
 
   clearActivePiece() {
@@ -630,7 +602,7 @@ class Tetris extends BaseVw {
       ],
     });
     this.setState({ activePiece: newPiece });
-    this.startTick();
+    this.rafTick();
   }
 
   restart() {
@@ -651,7 +623,7 @@ class Tetris extends BaseVw {
 
     this
       .blocksBoard
-      .setState({ blocks:  Array(rows).fill(Array(cols).fill(null))});
+      .setState({ blocks:  Array(rows).fill(Array(cols).fill(null)) });
 
     this.startTick();
   }
