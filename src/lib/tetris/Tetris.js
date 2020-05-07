@@ -51,6 +51,7 @@ class Tetris extends BaseVw {
       ...options.initialState,      
     };
 
+    // todo: validate me. Empty cells must be null.
     initialState.initialBlocks = [
       [null, null, null, null, null, null, null, null, null, null],
       [null, null, null, null, null, null, null, null, null, null],
@@ -182,7 +183,7 @@ class Tetris extends BaseVw {
       prevState.lines !== lines ||
       prevState.score !== score ||
       prevState.level !== level ||
-      prevState.percentToNextLevel != percentToNextLevel
+      prevState.percentToNextLevel !== percentToNextLevel
     ) {
       this.emit('updateStats', {
         lines,
@@ -195,71 +196,105 @@ class Tetris extends BaseVw {
     return this;
   }
 
-  // todo: memoize me
-  // would need blocks passed in.
-  // maybe just pass in piece
-  willFit(pieceMeta, shape, pos) {
-    const {
-      cols,
-      rows,
-    } = this.getState();
-    const { blocks } = this.blocksBoard.getState();
+  // TODO: memoize me
+  // TODO: write unit test
+  // TODO: doc me up
+  checkBoard(shape, pos) {
+    // console.log(shape);
+    // console.log(pos);
 
-    // check if we are within game boundaries
+    // todo: check shape args
+    // todo: is piece meta needed anymore?
+
     if (
-      pos[0] < pieceMeta.leftEdge * -1 ||
-      pos[0] > cols - pieceMeta.rightEdge ||
-      pos[1] > rows - pieceMeta.botEdge
+      !Array.isArray(pos) ||
+      !Number.isInteger(pos[0]) ||
+      !Number.isInteger(pos[1])
     ) {
-      return false;
+      throw new Error('The position must be provided as a 2 ' +
+        'element array of integers.');
     }
 
-    let foundOverlap = false;
+    const { blocks } = this.blocksBoard.getState();
+    const { rows, cols } = this.getState();
+    let grounded = false;
+    let invalidPos = false;
+    let gameOver = false;
+    let lines = [];
+    let topCellPos = null;
+    let botCellPos = null;
 
-    // ensure we dont overlap with any existing blocks
-    // (brute forcing here... perhaps there's a better way?)
-    for (let i=0; i < shape.length; i++) {
-      for (let j=0; j < shape[i].length; j++) {
+    for (let rowI = 0; rowI < shape.length; rowI++) {
+      for (let colI = 0; colI < shape[rowI].length; colI++) {
+        if (!shape[rowI][colI]) continue;
+
+        const cellRow = pos[1] + rowI;
+        const cellCol = pos[0] + colI;
+
+        if (!topCellPos) {
+          topCellPos = [cellRow, cellCol];
+        }
+
+        botCellPos = [cellRow, cellCol];
+
+        if (cellRow < 0) continue;
+
         if (
-          shape[i][j] &&
-          blocks[pos[1] + i] &&
-          blocks[pos[1] + i][pos[0] + j]
+          cellRow > rows - 1 ||
+          cellCol < 0 ||
+          cellCol > cols - 1 ||
+          blocks[cellRow][cellCol]
         ) {
-          foundOverlap = true;
+          invalidPos = true;
           break;
         }
-      }
 
-      if (foundOverlap) break;
-    }
-
-    return !foundOverlap;
-  }
-
-  // TODO: memoize if reasonable
-  // TODO: check args  
-  isGrounded(pieceMeta, shape, pos) {
-    const { rows } = this.getState();
-    const { blocks } = this.blocksBoard.getState();
-
-    if (pos[1] + pieceMeta.botEdge >= rows) return true;
-
-    // TODO: this won't be needed if checking args.
-    const shapeArr = Array.isArray(shape) ? shape : [[]];
-    for (let i = 0; i < shapeArr.length; i++) {
-      for (let j = 0; j < shapeArr[i].length; j++) {
-        const cell = shapeArr[i][j];
-        if (
-          cell &&
-          blocks[pos[1] + i + 1] &&
-          blocks[pos[1] + i + 1][pos[0] + j]
-        ) {
-          return true;
+        if (cellRow >= rows - 1 || blocks[cellRow + 1][cellCol]) {
+          grounded = true;
         }
       }
+
+      if (invalidPos) break;
     }
 
-    return false;
+    if (!invalidPos && grounded) {
+      // TODO: doc what I'm doing here
+
+      blocks
+        .slice(topCellPos[0], botCellPos[0] + 1)
+        .forEach((row, index) => {
+          const absRowIndex = index + topCellPos[0];
+          const emptyCell =
+            row.find((cell, cellIndex) => {
+              const shapeFillsCell =
+                shape[absRowIndex - pos[1]] &&
+                shape[absRowIndex - pos[1]][cellIndex - pos[0]];
+
+              return !cell && !shapeFillsCell;
+            });
+
+          if (emptyCell === undefined) {
+            lines.push(absRowIndex);
+          }
+        });
+
+      if (!lines.length && topCellPos[0] <= 0) {
+        gameOver = true;
+
+        // Even with lines it might still be game over, but
+        // the board would need to be analayzed without the lines.
+        // The expectation is the lines will be removed outside of
+        // this function and this function will be recalled with a
+        // new board.
+      }
+    }
+    
+    return {
+      grounded,
+      invalidPos,
+      gameOver,
+      lines,
+    };
   }
 
   onKeyDown(e) {
@@ -300,20 +335,19 @@ class Tetris extends BaseVw {
             newPos = [curPos[0], curPos[1] + 2];
           }
 
-          if (this.willFit(piece.meta, piece.getState().shape, newPos)) {
+          const { invalidPos } = this.checkBoard(piece.getState().shape, newPos);
+
+          if (!invalidPos) {
             this.activePieceContainer.setState({ position: newPos });
           }
         } else {
           // up key, let's rotate
-          const { blockSize } = this.getState();
           const rotatedShape = Tetris.rotateMatrix(piece.getState().shape);
-          const pieceMeta = Piece.getMeta(
-            rotatedShape,
-            blockSize,
-          );
           
           // todo: switch to blockSize
-          if (this.willFit(pieceMeta, rotatedShape, curPos)) {
+          const { invalidPos } = this.checkBoard(rotatedShape, curPos);
+
+          if (!invalidPos) {
             piece.setState({ shape: rotatedShape });
           } else {
             // we'll try and move up to 2 blocks in different directions
@@ -340,7 +374,9 @@ class Tetris extends BaseVw {
               ]
 
               // todo: switch to blockSize
-              if (this.willFit(pieceMeta, rotatedShape, adjustedP)) {
+              const { invalidPos } = this.checkBoard(rotatedShape, adjustedP);
+
+              if (!invalidPos) {  
                 this.activePieceContainer.setState({ position: adjustedP });
                 piece.setState({ shape: rotatedShape });
                 break;
@@ -384,24 +420,28 @@ class Tetris extends BaseVw {
       return;
     }
 
-    // check for game over
-    // check for full lines
+    // TODO: test if full lines on initialBlocks would be properly
+    // recognized
 
     const piece = activePiece.instance;
     const { shape, color } = piece.getState();
     const curPos = this.activePieceContainer.getState().position;
+    const {
+      grounded,
+      lines,
+      gameOver: boardGameOver,
+    } = this.checkBoard(
+      piece.getState().shape,
+      this.activePieceContainer.getState().position
+    );
 
-    if (
-      this.isGrounded(
-        piece.meta,
-        piece.getState().shape,
-        this.activePieceContainer.getState().position
-      )
-    ) {
+    if (boardGameOver) {
+      return;
+    }
+
+    if (grounded) {
       const { blockSize, cols } = this.getState();
       const { blocks } = this.blocksBoard.getState();
-      const lines = [];
-      const rowsLineChecked = [];
       let updatedBlocks = [...blocks];
 
       // Turn the active piece into individual blocks that we can remove
@@ -422,15 +462,6 @@ class Tetris extends BaseVw {
 
                 return cell;
               });
-
-            // identify if we have any full lines
-            if (
-              !rowsLineChecked.includes(blocksRowIndex) &&
-              updatedBlocks[blocksRowIndex].find(block => !block) === undefined
-            ) {
-              rowsLineChecked.push(blocksRowIndex);
-              lines.push(blocksRowIndex);
-            }
           }
         });
       });
@@ -490,7 +521,7 @@ class Tetris extends BaseVw {
     this._tickTimeout = window.setTimeout(() => {
       window.requestAnimationFrame(this.tick.bind(this));
     }, activePieceDropSpeedFactor - ((level - 1) * 100));
-    // TODO: that will be 0 at a high enouggh level. Prevent it going below 20.    
+    // TODO: that will be 0 at a high enough level. Prevent it going below 20.    
   }
 
   clearActivePiece() {
