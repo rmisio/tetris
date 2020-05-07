@@ -47,7 +47,7 @@ class Tetris extends BaseVw {
       level: 1,
       score: 0,
       percentToNextLevel: 0,
-      activePieceDropSpeedFactor: 500,
+      tickSpeed: 1000,
       ...options.initialState,      
     };
 
@@ -116,10 +116,9 @@ class Tetris extends BaseVw {
     this.blocksBoard._el.style.position = 'absolute';
     this._el.appendChild(this.blocksBoard.render().el);
 
+    this._tickStart = null;
     this._lineRemovals = [];
     this._interruptedLineRemovals = false;
-
-    // this.start();
   }
 
   get el() {
@@ -132,6 +131,17 @@ class Tetris extends BaseVw {
 
     if (updatedState.gameOver === true) {
       updatedState.started = false;
+    }
+
+    if (
+      !options.beingConstructed &&
+      updatedState.level !== undefined &&
+      updatedState.level !== prevState.level
+    ) {
+      const fps = 1000 / 60;
+      // TODO: on higher levels increase speed by smaller increments?
+      updatedState.tickSpeed = 1000 - ((updatedState.level - 1) * 100);
+      updatedState.tickSpeed = Math.max(fps, updatedState.tickSpeed);
     }
 
     super.setState(updatedState, {
@@ -154,6 +164,10 @@ class Tetris extends BaseVw {
       gameOver,
       started,
     } = this.getState();
+
+    if (prevState.started && !started) {
+      this.cancelTick();
+    }
 
     // Although not enforced, blockSize is the only state we're potentially
     // expecting to be changed from the outside after initialization.
@@ -182,7 +196,7 @@ class Tetris extends BaseVw {
       // resumed in a way where they requery the dom for a new
       // element and resume where they left off.
       this._interruptedLineRemovals = !!this._lineRemovals.length;
-      if (this._interruptedLineRemovals) this.rafTick();
+      if (this._interruptedLineRemovals) this.startTick();
     }
 
     // if necessary, fire change events
@@ -335,6 +349,7 @@ class Tetris extends BaseVw {
         const curPos = this.activePieceContainer.getState().position;
 
         if ([37, 39, 40].includes(e.keyCode)) {
+          const movingDown = e.keyCode === 40;
           let newPos;
 
           if (e.keyCode === 37) {
@@ -346,7 +361,12 @@ class Tetris extends BaseVw {
             newPos = [curPos[0], curPos[1] + 2];
           }
 
-          const { invalidPos } = this.checkBoard(piece.getState().shape, newPos);
+          let { invalidPos } = this.checkBoard(piece.getState().shape, newPos);
+
+          if (invalidPos && movingDown) {
+            newPos = [curPos[0], curPos[1] + 1];
+            invalidPos = (this.checkBoard(piece.getState().shape, newPos)).invalidPos;
+          }
 
           if (!invalidPos) {
             this.activePieceContainer.setState({ position: newPos });
@@ -404,19 +424,39 @@ class Tetris extends BaseVw {
     return (10 * level) + ((lineCount - 1) * (5 * level));
   }
 
+  startTick() {
+    this.cancelTick();
+    this.rafTick();
+  }
+
   rafTick() {
-    window.cancelAnimationFrame(this._progressPieceRaf);
     this._progressPieceRaf =
-      window.requestAnimationFrame(this.tick.bind(this));; 
+      window.requestAnimationFrame(this.tick.bind(this));
+  }
+  
+  cancelTick() {
+    this._tickStart = null;
+    window.cancelAnimationFrame(this._progressPieceRaf);
   }
 
   tick(timestamp) {
+    const { tickSpeed } = this.getState();
+    this._tickStart = this._tickStart || timestamp;
+
+    // console.log(`tick: ${timestamp} - ${this._tickStart}`);
+    if (timestamp - this._tickStart < tickSpeed) {
+      // console.log('tock');
+      this.rafTick();
+      return;
+    }
+
+    this._tickStart = null;
+
     const {
       started,
       gameOver,
       activePiece,
       level,
-      activePieceDropSpeedFactor,
     } = this.getState();
 
     if (!started || gameOver) return;
@@ -529,11 +569,7 @@ class Tetris extends BaseVw {
 
     this.activePieceContainer.setState({ position: [curPos[0], curPos[1] + 1] });
 
-    window.clearTimeout(this._tickTimeout);
-    this._tickTimeout = window.setTimeout(() => {
-      window.requestAnimationFrame(this.tick.bind(this));
-    }, activePieceDropSpeedFactor - ((level - 1) * 100));
-    // TODO: that will be 0 at a high enough level. Prevent it going below 20.    
+    this.startTick();
   }
 
   clearActivePiece() {
@@ -594,7 +630,7 @@ class Tetris extends BaseVw {
       ],
     });
     this.setState({ activePiece: newPiece });
-    this.rafTick();
+    this.startTick();
   }
 
   restart() {
@@ -617,7 +653,7 @@ class Tetris extends BaseVw {
       .blocksBoard
       .setState({ blocks:  Array(rows).fill(Array(cols).fill(null))});
 
-    this.rafTick();
+    this.startTick();
   }
 
   start() {
@@ -632,7 +668,7 @@ class Tetris extends BaseVw {
       this.restart();
     } else {
       this.setState({ started: true });
-      this.rafTick();
+      this.startTick();
     }
   }
 
