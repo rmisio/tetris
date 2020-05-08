@@ -8,6 +8,7 @@ html {
 
 html,
 body {
+  height: 100%;
   // prevent pull-refresh since otherwise dragging a piece down
   // could trigger a refresh of the page
   overscroll-behavior-y: contain;
@@ -37,7 +38,7 @@ body {
   background-color: #000;
   background-repeat: repeat;
   color: $clrTx;
-  height: 100vh;
+  // height: 100vh;
   font-family: 'OpenSans', sans-serif;
   font-size: 16px;
   position: relative;

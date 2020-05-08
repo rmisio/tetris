@@ -1,8 +1,6 @@
 @import '~sass-mq';
 @import 'styles/variables.scss';
 
-// TODO: check me on smalles sizes. Probably need an auto inner scroll bar;
-
 .MyModal-overlay, .TextOverlay-overlay {
   background-color: rgba(0, 0, 0, 0.75);
   position: absolute;
@@ -15,17 +13,24 @@
 .MyModal-wrap {
   outline: none;
   padding: 25px;
-  position: relative;
-  margin: 0 auto;
-  max-width: 400px;
+  margin: 0 10px;
+  max-width: 420px;
   background-color: #000;
   border: 1px solid $clrBorder;
   box-shadow: 0 1px 2px rgba(255,255,255,0.2);
   z-index: 1;
+  position: absolute;
   top: 10px;
+  left: 5px;
+  right: 5px;
+  max-height: calc(100% - 20px);
+  overflow: auto;  
 
-  @include mq($from: medium) {
+  @include mq($from: 'small') {
+    position: relative;
     top: 40px;
+    margin: 0 auto;
+    max-height: calc(100% - 60px);
   }
 
   h1 {
@@ -42,5 +47,9 @@
       width: 50px;
       height: 50px;
     }
+  }
+
+  .MyModal-modalContent {
+    overflow: auto;
   }
 }

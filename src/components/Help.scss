@@ -10,14 +10,21 @@
         display: flex;
         align-items: center;
 
+        .touchEnabled & {
+          margin-bottom: 5px;
+          align-items: start;
+        }
+
         & >:first-child {
           display: flex;
           align-items: center;
           padding-right: 10px;
+          flex-shrink: 0;
 
           .touchEnabled & {
             width: 125px;
-          }          
+            display: block;
+          }
 
           svg {
             fill: $clrTx;

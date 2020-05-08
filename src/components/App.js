@@ -1,7 +1,6 @@
 import React, {
   useRef,
   useEffect,
-  useLayoutEffect,
   useState
 } from 'react';
 import IosPlay from 'react-ionicons/lib/IosPlay';
@@ -59,21 +58,17 @@ function App() {
       setTetris(null);      
       window.removeEventListener('resize', handleResize);
     };
-    // TODO: disable eslint
+    // eslint-disable-next-line
   }, []);
 
-  // TODO: is useLayoutEffect needed here
-  useLayoutEffect(() => {
+  useEffect(() => {
     const mainGridEl = mainGrid.current;
 
     if (calcTetrisLayout) {
       const { matches } = window.matchMedia('(min-width: 48em)');
       const tetrisContainer = mainGrid.current.children[0];
 
-      if (matches) {
-        mainGrid.current.style.gridTemplateColumns = '';
-      }
-
+      mainGrid.current.style.gridTemplateColumns = '';
       tetrisContainer.style.height = '100%';
       const tetrisGameEl = tetrisContainer.children[0];
 
@@ -112,7 +107,7 @@ function App() {
       
       if (matches) {
         mainGridEl.style.gridTemplateColumns =
-          `minmax(82px, 1fr) ${blockSize * cols}px minmax(82px, 1fr)`;
+          `minmax(82px, 1fr) ${(blockSize * cols) + 2}px minmax(82px, 1fr)`;
       }      
 
       setCalcTetrisLayout(false);
@@ -149,14 +144,17 @@ function App() {
   };
 
   const PausePlay = playing ?
-    <button className="iconBtn btnPause" onClick={handlePause}>
-      <IosPause />
+    <button
+      className="iconBtn btnPause"
+      onClick={handlePause}
+    >
+      <IosPause fontSize="1.5rem" />
     </button> :
     <button
       className="iconBtn btnPlay"
       onClick={() => startTetris()}
     >
-      <IosPlay />
+      <IosPlay fontSize="1.7rem" />
     </button>;
 
   const handleRestart = () => {
@@ -201,13 +199,13 @@ function App() {
               className="iconBtn btnRestart"
               onClick={handleRestart}
             >
-              <IosRefresh fontSize="1.5rem" />
+              <IosRefresh fontSize="1.7rem" />
             </button>
             <button
               className={`iconBtn btnHelp ${showHelp ? 'active' : ''}`}
               onClick={() => setShowHelp(true)}
             >
-              <IosHelp fontSize="1.8rem" />
+              <IosHelp fontSize="2rem" />
             </button>
           </nav>          
         </div>

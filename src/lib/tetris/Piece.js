@@ -46,13 +46,13 @@ const memoizedMeta = memoize(
 
     // TODO: is that ^^^ valid still?
 
-
     const fWidth = lastColWithCell - firstColWithCell + 1;
     const fHeight = lastRowWithCell - firstRowWithCell + 1;
     const leftEdge = firstColWithCell;
     const topEdge = firstRowWithCell;
 
-    // todo: explain how the units here is "cells"
+    // The units here are cells (i.e. blocks). For example, a
+    // width of 
     // explain how edges are "functional" edges
     return {
       width: (shape[0] && shape[0].length) || 0,
@@ -86,7 +86,6 @@ class Piece extends BaseVw {
 
     const container = this._el = document.createElement('div');
     container.style.position = 'relative';
-    // container.style.backgroundColor = '#FFF';
     this.render();
   }
 

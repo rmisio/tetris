@@ -1,8 +1,3 @@
-// TODO: blockwidth and blockheight condensed into one blocksize
-// TODO: ensure shape is always a square (probably beyond this file)
-// TODO: remove the debugging el IDs
-// TODO: ensure color across app hex
-
 import Events from 'events';
 import { isElement, memoize, throttle } from 'lodash';
 import { randomInt } from 'util/number';
@@ -11,8 +6,6 @@ import ActivePieceBoard from './PieceBoard';
 import BlocksBoard from './BlocksBoard';
 import Piece from './Piece';
 import shapes from './shapes';
-
-// TODO: take into account rotatable property.
 
 const memoizedRotateMatrix = memoize(matrix => {
   const result = [];
@@ -27,11 +20,8 @@ const memoizedRotateMatrix = memoize(matrix => {
   return result;
 });
 
-// todo: change el to container.
 class Tetris extends BaseVw {
   constructor(el, options={}) {
-    // todo: switch to rows, cols and blockSize. simple as a pimple dog.
-
     if (!isElement(el)) {
       throw new Error('Please provide a valid dom element.');
     }
@@ -132,7 +122,6 @@ class Tetris extends BaseVw {
 
     super.setState(updatedState, {
       ...options,
-      // todo: test me
       renderOnChange: false,
     });
 
@@ -362,9 +351,6 @@ class Tetris extends BaseVw {
     } else {
       // we'll try and move up to 2 blocks in different directions
       // to see if the rotate piece will fit
-      // TODO: I suspect there's a more efficient way to get an idea
-      // of which direction might fit rather than blindly trying them
-      // all.
 
       const adjustments = [
         [-1,  0],   // one spot left
@@ -383,7 +369,6 @@ class Tetris extends BaseVw {
           curPos[1] + adjustments[i][1]
         ]
 
-        // todo: switch to blockSize
         const { invalidPos } = this.checkBoard(rotatedShape, adjustedP);
 
         if (!invalidPos) {  
@@ -604,8 +589,6 @@ class Tetris extends BaseVw {
             (this._lineRemovals || []).forEach(l => l.cancel());
             this._lineRemovals = [];
           });
-
-          // todo: update level
       } else {
         this.dropNewPiece();
       }

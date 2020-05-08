@@ -27,8 +27,6 @@ class BlocksBoard extends BaseVw {
     });
 
     this._el = document.createElement('div');
-    // TODO: remove these dubugging IDs
-    this._el.id = 'BLOCKS_BOARD';
     this._rowRemovalAnims = {};
   }
 
@@ -75,7 +73,6 @@ class BlocksBoard extends BaseVw {
     }
   }  
 
-  // todo: note about startState, only pass in under certain conditions.
   animateRowPreRemoval(index) {
     if (!Number.isInteger(index)) {
       throw new Error('The index must be provided as an integer.');

@@ -1,3 +1,4 @@
+// todo: rotatable prop is ignored at this time.
 const shapes = [
   {
     shape: [

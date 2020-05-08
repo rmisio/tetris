@@ -14,15 +14,7 @@ class PieceBoard extends BaseVw {
       }
     });
 
-    const {
-      rows,
-      cols,
-      blockSize,
-    } = this.getState();
-
-    // Todo: maybe make a Board parent class?
     this._el = document.createElement('div');
-    this._el.id = 'PIECE_BOARD';
   }
 
   get el() {
@@ -75,8 +67,6 @@ class PieceBoard extends BaseVw {
       )
     ) {
       // TODO: break up this if for a less ambiguous error messages.
-      // clean up!
-      // test this error;
       throw new Error('The position must be a 2 item array, both of which are integers.' +
         'The first integer must be less than or equal to the absolute width. The second must be ' +
         'less than or equal to the absolute height.');

@@ -8,11 +8,6 @@
   display: flex;
   flex-flow: column;
 
-  // TODO: on smalles widths make sure font sizes don't break;
-  // try large number high score and score
-  // TODO: on landscape mobile (i.e. small height), reduce height
-  // of the aside box bar;
-
   @include mq($until: medium) {
     border-top: 1px solid $clrBorder;
   }
@@ -28,6 +23,10 @@
     position: relative;    
     margin: 10px auto 3px;
     font-size: 0.9rem;
+
+    @include mq($until: small) {
+      font-size: 0.8rem;
+    }
 
     @include mq($from: medium) {
       padding: 15px;
@@ -107,7 +106,6 @@
       z-index: 1;
     }
 
-    // TODO: add diag line texture...?
     @include mq($from: medium) {
       height: 10px !important;
       transition: width 0.6s linear;
