@@ -303,46 +303,6 @@ class Tetris extends BaseVw {
     };
   }
 
-  onTouchStart(e) {
-    this.activeTouch = true;
-    this.touchTap = true; 
-    this.lastTouchX = e.touches[0].clientX;
-    this.lastTouchY = e.touches[0].clientY;
-  }
-
-  onTouchEnd(e) {
-    this.activeTouch = false;
-
-    if (this.touchTap && this.el.contains(e.target)) {
-      this.rotatePiece();
-      this.touchTap = false;
-    }
-  }
-
-  onTouchMove(e) {
-    if (!this.activeTouch) return;
-    this.touchTap = false;
-
-    const { blockSize } = this.getState();
-    const curX = e.touches[0].clientX;
-    const curY = e.touches[0].clientY;
-    const changeX = curX - this.lastTouchX;
-    const changeY = curY - this.lastTouchY;
-    let direction = 'down';
-
-    if (Math.abs(changeX) > Math.abs(changeY)) {
-      direction = changeX > 0 ? 'right' : 'left';
-
-      if (Math.abs(changeX) < blockSize) return;
-    } else if (changeY < blockSize) {
-      return;
-    }
-
-    this.lastTouchX = curX;
-    this.lastTouchY = curY;
-    this.movePiece(direction);
-  };
-
   movePiece(direction) {
     const validDirs = ['left', 'right', 'down'];
 
@@ -433,7 +393,47 @@ class Tetris extends BaseVw {
         }
       }
     }
+  }  
+
+  onTouchStart(e) {
+    this.activeTouch = true;
+    this.touchTap = true; 
+    this.lastTouchX = e.touches[0].clientX;
+    this.lastTouchY = e.touches[0].clientY;
   }
+
+  onTouchEnd(e) {
+    this.activeTouch = false;
+
+    if (this.touchTap && this.el.contains(e.target)) {
+      this.rotatePiece();
+      this.touchTap = false;
+    }
+  }
+
+  onTouchMove(e) {
+    if (!this.activeTouch) return;
+    this.touchTap = false;
+
+    const { blockSize } = this.getState();
+    const curX = e.touches[0].clientX;
+    const curY = e.touches[0].clientY;
+    const changeX = curX - this.lastTouchX;
+    const changeY = curY - this.lastTouchY;
+    let direction = 'down';
+
+    if (Math.abs(changeX) > Math.abs(changeY)) {
+      direction = changeX > 0 ? 'right' : 'left';
+
+      if (Math.abs(changeX) < blockSize) return;
+    } else if (changeY < blockSize) {
+      return;
+    }
+
+    this.lastTouchX = curX;
+    this.lastTouchY = curY;
+    this.movePiece(direction);
+  };
 
   onKeyDown(e) {
     if (

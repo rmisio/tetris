@@ -6,6 +6,13 @@ html {
   box-sizing: border-box;
 }
 
+html,
+body {
+  // prevent pull-refresh since otherwise dragging a piece down
+  // could trigger a refresh of the page
+  overscroll-behavior-y: contain;
+}
+
 *, *:before, *:after {
   box-sizing: inherit;
 }
@@ -27,6 +34,7 @@ ul.unstyled {
 
 body {
   background: url("../img/asteroids.jpg");
+  background-color: #000;
   background-repeat: repeat;
   color: $clrTx;
   height: 100vh;
