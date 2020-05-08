@@ -48,16 +48,16 @@ function App() {
   };
 
   useEffect(() => {
-    const onResize = e => {
+    const handleResize = e => {
       setCalcTetrisLayout(true);
     };
 
-    window.addEventListener('resize', onResize);
+    window.addEventListener('resize', handleResize);
 
     return () => {
       if (tetris) tetris.remove();
       setTetris(null);      
-      window.removeEventListener('resize', onResize);
+      window.removeEventListener('resize', handleResize);
     };
     // TODO: disable eslint
   }, []);

@@ -4,7 +4,7 @@
 // TODO: ensure color across app hex
 
 import Events from 'events';
-import { isElement, memoize } from 'lodash';
+import { isElement, memoize, throttle } from 'lodash';
 import { randomInt } from 'util/number';
 import BaseVw from './BaseVw.js';
 import ActivePieceBoard from './PieceBoard';
@@ -81,6 +81,13 @@ class Tetris extends BaseVw {
     container.style.position = 'relative';
 
     document.addEventListener('keydown', this.onKeyDown.bind(this), false);
+
+    this.activeTouch = false;
+    this.throttledOnTouchMove = throttle(this.onTouchMove.bind(this), 30);
+
+    document.addEventListener('touchstart', this.onTouchStart.bind(this), false);
+    document.addEventListener('touchend', this.onTouchEnd.bind(this), false);
+    document.addEventListener('touchmove', this.throttledOnTouchMove, false);    
 
     el.appendChild(container);
 
@@ -296,18 +303,143 @@ class Tetris extends BaseVw {
     };
   }
 
-  onKeyDown(e) {
+  onTouchStart(e) {
+    this.activeTouch = true;
+    this.touchTap = true; 
+    this.lastTouchX = e.touches[0].clientX;
+    this.lastTouchY = e.touches[0].clientY;
+  }
+
+  onTouchEnd(e) {
+    this.activeTouch = false;
+
+    if (this.touchTap && this.el.contains(e.target)) {
+      this.rotatePiece();
+      this.touchTap = false;
+    }
+  }
+
+  onTouchMove(e) {
+    if (!this.activeTouch) return;
+    this.touchTap = false;
+
+    const { blockSize } = this.getState();
+    const curX = e.touches[0].clientX;
+    const curY = e.touches[0].clientY;
+    const changeX = curX - this.lastTouchX;
+    const changeY = curY - this.lastTouchY;
+    let direction = 'down';
+
+    if (Math.abs(changeX) > Math.abs(changeY)) {
+      direction = changeX > 0 ? 'right' : 'left';
+
+      if (Math.abs(changeX) < blockSize) return;
+    } else if (changeY < blockSize) {
+      return;
+    }
+
+    this.lastTouchX = curX;
+    this.lastTouchY = curY;
+    this.movePiece(direction);
+  };
+
+  movePiece(direction) {
+    const validDirs = ['left', 'right', 'down'];
+
+    if (!validDirs.includes(direction)) {
+      throw new Error(`direction must be one of [${['left', 'right', 'down'].join(', ')}]`);
+    }
+
     const {
       started,
       activePiece,
     } = this.getState();
 
+    if (!started || !activePiece) return;
+
+    const piece = activePiece.instance;
+    const curPos = this.activePieceContainer.getState().position;
+    let newPos;
+
+    if (direction === 'left') {
+      newPos = [curPos[0] - 1, curPos[1]];
+    } else if (direction === 'right') {
+      newPos = [curPos[0] + 1, curPos[1]];
+    } else {
+      // down
+      newPos = [curPos[0], curPos[1] + 2];
+    }
+
+    let { invalidPos } = this.checkBoard(piece.getState().shape, newPos);
+
+    if (invalidPos && direction === 'down') {
+      newPos = [curPos[0], curPos[1] + 1];
+      invalidPos = (this.checkBoard(piece.getState().shape, newPos)).invalidPos;
+    }
+
+    if (!invalidPos) {
+      this.activePieceContainer.setState({ position: newPos });
+    }    
+  }
+
+  rotatePiece() {
+    const {
+      started,
+      activePiece,
+    } = this.getState();
+
+    if (!started || !activePiece) return;
+
+    const piece = activePiece.instance;
+    const curPos = this.activePieceContainer.getState().position;
+    const rotatedShape = Tetris.rotateMatrix(piece.getState().shape);
+    
+    // todo: switch to blockSize
+    const { invalidPos } = this.checkBoard(rotatedShape, curPos);
+
+    if (!invalidPos) {
+      piece.setState({ shape: rotatedShape });
+    } else {
+      // we'll try and move up to 2 blocks in different directions
+      // to see if the rotate piece will fit
+      // TODO: I suspect there's a more efficient way to get an idea
+      // of which direction might fit rather than blindly trying them
+      // all.
+
+      const adjustments = [
+        [-1,  0],   // one spot left
+        [1, 0],     // one spot right
+        [0, -1],    // one spot up
+        [0, 1],     // etc...
+        [-2,  0],   // one spot left
+        [2, 0],     // one spot right
+        [0, -2],    // one spot up
+        [0, 2],     // etc...
+      ];
+
+      for (let i = 0; i < adjustments.length; i++) {
+        const adjustedP = [
+          curPos[0] + adjustments[i][0],
+          curPos[1] + adjustments[i][1]
+        ]
+
+        // todo: switch to blockSize
+        const { invalidPos } = this.checkBoard(rotatedShape, adjustedP);
+
+        if (!invalidPos) {  
+          this.activePieceContainer.setState({ position: adjustedP });
+          piece.setState({ shape: rotatedShape });
+          break;
+        }
+      }
+    }
+  }
+
+  onKeyDown(e) {
     if (
       !(
         e.keyCode >= 37 &&
-        e.keyCode <= 40 &&
-        started &&
-        activePiece
+        e.keyCode <= 40
       )
     ) {
       return;
@@ -315,82 +447,24 @@ class Tetris extends BaseVw {
 
     e.preventDefault();
 
-    requestAnimationFrame(() => {
-      let piece = activePiece;
+    if ([37, 39, 40].includes(e.keyCode)) {
+      let direction;
 
-      if (piece) {
-        piece = piece.instance;
-        const curPos = this.activePieceContainer.getState().position;
+      switch (e.keyCode) {
+        case 37:
+          direction = 'left';
+          break;
+        case 39:
+          direction = 'right';
+          break;
+        default:
+          direction = 'down';
+      };
 
-        if ([37, 39, 40].includes(e.keyCode)) {
-          const movingDown = e.keyCode === 40;
-          let newPos;
-
-          if (e.keyCode === 37) {
-            newPos = [curPos[0] - 1, curPos[1]];
-          } else if (e.keyCode === 39) {
-            newPos = [curPos[0] + 1, curPos[1]];
-          } else {
-            // down
-            newPos = [curPos[0], curPos[1] + 2];
-          }
-
-          let { invalidPos } = this.checkBoard(piece.getState().shape, newPos);
-
-          if (invalidPos && movingDown) {
-            newPos = [curPos[0], curPos[1] + 1];
-            invalidPos = (this.checkBoard(piece.getState().shape, newPos)).invalidPos;
-          }
-
-          if (!invalidPos) {
-            this.activePieceContainer.setState({ position: newPos });
-          }
-        } else {
-          // up key, let's rotate
-          const rotatedShape = Tetris.rotateMatrix(piece.getState().shape);
-          
-          // todo: switch to blockSize
-          const { invalidPos } = this.checkBoard(rotatedShape, curPos);
-
-          if (!invalidPos) {
-            piece.setState({ shape: rotatedShape });
-          } else {
-            // we'll try and move up to 2 blocks in different directions
-            // to see if the rotate piece will fit
-            // TODO: I suspect there's a more efficient way to get an idea
-            // of which direction might fit rather than blindly trying them
-            // all.
-
-            const adjustments = [
-              [-1,  0],   // one spot left
-              [1, 0],     // one spot right
-              [0, -1],    // one spot up
-              [0, 1],     // etc...
-              [-2,  0],   // one spot left
-              [2, 0],     // one spot right
-              [0, -2],    // one spot up
-              [0, 2],     // etc...
-            ];
-
-            for (let i = 0; i < adjustments.length; i++) {
-              const adjustedP = [
-                curPos[0] + adjustments[i][0],
-                curPos[1] + adjustments[i][1]
-              ]
-
-              // todo: switch to blockSize
-              const { invalidPos } = this.checkBoard(rotatedShape, adjustedP);
-
-              if (!invalidPos) {  
-                this.activePieceContainer.setState({ position: adjustedP });
-                piece.setState({ shape: rotatedShape });
-                break;
-              }
-            }
-          }
-        }
-      }
-    });
+      this.movePiece(direction);
+    } else {
+      this.rotatePiece();
+    }
   }
 
   // todo: I am memoizable
@@ -657,7 +731,9 @@ class Tetris extends BaseVw {
   remove() {
     this.stop();
     document.removeEventListener('keydown', this.onKeyDown, false);
-    this.removeAllListeners();
+    document.removeEventListener('touchstart', this.onTouchStart, false);
+    document.removeEventListener('touchend', this.onTouchEnd, false);
+    document.removeEventListener('touchmove', this.throttledOnTouchMove, false);
   }
 
   /*
