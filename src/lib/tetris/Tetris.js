@@ -319,15 +319,24 @@ class Tetris extends BaseVw {
       newPos = [curPos[0], curPos[1] + 2];
     }
 
-    let { invalidPos } = this.checkBoard(piece.getState().shape, newPos);
+    let {
+      invalidPos,
+      grounded,
+    } = this.checkBoard(piece.getState().shape, newPos);
 
     if (invalidPos && direction === 'down') {
       newPos = [curPos[0], curPos[1] + 1];
-      invalidPos = (this.checkBoard(piece.getState().shape, newPos)).invalidPos;
+      (
+        {
+          invalidPos,
+          grounded
+        } = this.checkBoard(piece.getState().shape, newPos)
+      );
     }
 
     if (!invalidPos) {
       this.activePieceContainer.setState({ position: newPos });
+      if (grounded) this.startTick();
     }    
   }
 
@@ -533,6 +542,9 @@ class Tetris extends BaseVw {
         row.forEach((col, colIndex) => {
           if (col) {
             const blocksRowIndex = curPos[1] + rowIndex;
+
+            // todo: this really shouldn't be needed
+            if (!updatedBlocks[blocksRowIndex]) return;
 
             updatedBlocks[blocksRowIndex] =
               updatedBlocks[blocksRowIndex].map((cell, cellIndex) => {
