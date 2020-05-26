@@ -614,6 +614,7 @@ class Tetris extends BaseVw {
       '#cb42f5',
       '#f5b342',
       '#f5427b',
+      '#f2e3aa',
     ];
 
     this.clearActivePiece();
