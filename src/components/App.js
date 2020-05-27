@@ -1,3 +1,4 @@
+// TODO: instructions should be above Game Over
 import React, {
   useRef,
   useEffect,
@@ -7,6 +8,7 @@ import IosPlay from 'react-ionicons/lib/IosPlay';
 import IosRefresh from 'react-ionicons/lib/IosRefresh';
 import IosPause from 'react-ionicons/lib/IosPause';
 import IosHelp from 'react-ionicons/lib/IosHelp';
+import ReactModal from 'react-modal';
 import Tetris from 'lib/tetris/Tetris';
 import MyModal from 'components/MyModal';
 import TextOverlay from './TextOverlay';
@@ -30,21 +32,9 @@ function App() {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(localStorage.getItem('highScore') || 0);
   const [showHelp, setShowHelp] = useState(true);
-
   const touchEnabled = 'ontouchstart' in document.documentElement;
 
-  const tetrisChange = e => {
-    setLevel(e.level);
-    setPercentToNextLevel(e.percentToNextLevel);
-    setScore(e.score);
-    setGameOver(e.gameOver);
-    setPlaying(e.started);
-
-    if (e.score > highScore) {
-      setHighScore(e.score);
-      localStorage.setItem('highScore', e.score);
-    }
-  };
+  ReactModal.setAppElement('body')  
 
   useEffect(() => {
     const handleResize = e => {
@@ -63,6 +53,19 @@ function App() {
 
   useEffect(() => {
     const mainGridEl = mainGrid.current;
+
+    const tetrisChange = e => {
+      setLevel(e.level);
+      setPercentToNextLevel(e.percentToNextLevel);
+      setScore(e.score);
+      setGameOver(e.gameOver);
+      setPlaying(e.started);
+
+      if (e.score > highScore) {
+        setHighScore(e.score);
+        localStorage.setItem('highScore', e.score);
+      }
+    };    
 
     if (calcTetrisLayout) {
       const { matches } = window.matchMedia('(min-width: 48em)');
@@ -112,7 +115,7 @@ function App() {
 
       setCalcTetrisLayout(false);
     }
-  }, [tetris, cols, rows, calcTetrisLayout]);
+  }, [tetris, cols, rows, calcTetrisLayout, highScore]);
 
   useEffect(() => {
     if (playing) {

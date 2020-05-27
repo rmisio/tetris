@@ -1,3 +1,5 @@
+// TODO: not same color twice
+
 import Events from 'events';
 import { isElement, memoize, throttle } from 'lodash';
 import { randomInt } from 'util/number';
@@ -210,7 +212,7 @@ class Tetris extends BaseVw {
         'element array of integers.');
     }
 
-    const { blocks } = this.blocksBoard.getState();
+    const { blocks } = this.blocksBoard.getState();    
     const { rows, cols } = this.getState();
     let grounded = false;
     let invalidPos = false;
@@ -254,7 +256,6 @@ class Tetris extends BaseVw {
 
     if (!invalidPos && grounded) {
       // TODO: doc what I'm doing here
-
       blocks
         .slice(topCellPos[0], botCellPos[0] + 1)
         .forEach((row, index) => {
@@ -296,7 +297,7 @@ class Tetris extends BaseVw {
     const validDirs = ['left', 'right', 'down'];
 
     if (!validDirs.includes(direction)) {
-      throw new Error(`direction must be one of [${['left', 'right', 'down'].join(', ')}]`);
+      throw new Error(`direction must be one of [${validDirs.join(', ')}]`);
     }
 
     const {
@@ -336,7 +337,9 @@ class Tetris extends BaseVw {
 
     if (!invalidPos) {
       this.activePieceContainer.setState({ position: newPos });
-      if (grounded) this.startTick();
+      if (grounded) {
+        this.startTick();
+      }
     }    
   }
 
@@ -523,7 +526,7 @@ class Tetris extends BaseVw {
       gameOver: boardGameOver,
     } = this.checkBoard(
       piece.getState().shape,
-      this.activePieceContainer.getState().position
+      curPos
     );
 
     if (boardGameOver) {
@@ -544,19 +547,21 @@ class Tetris extends BaseVw {
             const blocksRowIndex = curPos[1] + rowIndex;
 
             // todo: this really shouldn't be needed
-            if (!updatedBlocks[blocksRowIndex]) return;
+            // todo: this really shouldn't be needed
+            // todo: this really shouldn't be needed
+            // if (!updatedBlocks[blocksRowIndex]) return;
 
-            updatedBlocks[blocksRowIndex] =
-              updatedBlocks[blocksRowIndex].map((cell, cellIndex) => {
-                if (cellIndex === curPos[0] + colIndex) {
-                  return {
-                    color,
-                    size: blockSize,
-                  }
+          updatedBlocks[blocksRowIndex] =
+            updatedBlocks[blocksRowIndex].map((cell, cellIndex) => {
+              if (cellIndex === curPos[0] + colIndex) {
+                return {
+                  color,
+                  size: blockSize,
                 }
+              }
 
-                return cell;
-              });
+              return cell;
+            });
           }
         });
       });
@@ -622,7 +627,7 @@ class Tetris extends BaseVw {
   dropNewPiece() {
     const { blockSize, cols } = this.getState();
 
-    const colors = [
+    let colors = [
       '#cb42f5',
       '#f5b342',
       '#f5427b',
@@ -630,12 +635,18 @@ class Tetris extends BaseVw {
     ];
 
     this.clearActivePiece();
+
+    if (this._prevPieceColor) {
+      colors = colors.filter(c => c !== this._prevPieceColor);
+    }
+
+    const color = this._prevPieceColor = colors[randomInt(0, colors.length - 1)];
     const newPiece = shapes[randomInt(0, shapes.length - 1)];
     const instance = newPiece.instance = new Piece({
       initialState: {
         shape: newPiece.shape,
         blockSize,
-        color: colors[randomInt(0, colors.length - 1)],
+        color,
       },
     });
 
@@ -662,17 +673,17 @@ class Tetris extends BaseVw {
       fHeight,
       leftEdge,
       topEdge,
-    } = instance.meta;    
+    } = instance.meta;
 
     this.activePieceContainer.setState({
       piece: instance,
       position: [
         Math.floor((cols - fWidth) / 2) - leftEdge,
-        (Math.floor(fHeight / 2)  + topEdge) * -1
+        (fHeight + topEdge) * -1
       ],
     });
     this.setState({ activePiece: newPiece });
-    this.rafTick();
+    this.startTick();
   }
 
   restart() {
