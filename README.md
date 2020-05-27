@@ -1,1 +1,1 @@
-My take on Tetris.
+My take on Tetris using JavaScript.
