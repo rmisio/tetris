@@ -1,4 +1,3 @@
-// TODO: instructions should be above Game Over
 import React, {
   useRef,
   useEffect,
@@ -166,7 +165,7 @@ function App() {
     }
   };
 
-  const HelpScreen = (
+  const HelpScreen = showHelp ? (
     <MyModal
       isOpen={showHelp}
       parentSelector={() => mainWrap.current}
@@ -179,7 +178,7 @@ function App() {
         onStartClick={() => startTetris()}
       ></Help>      
     </MyModal>
-  );
+  ) : null;
 
   const GameOver = gameOver ?
     (
@@ -238,14 +237,10 @@ function App() {
               highScore={highScore}
             />
           </aside>
-          <nav>
-            <p style={{ width: '50%', height: '100%', backgroundColor: 'orange', float: 'left' }}></p>
-            <p style={{ width: '50%', height: '100%', backgroundColor: 'green', float: 'left' }}></p>
-          </nav>
         </main>
       </div>
       {GameOver}
-      {HelpScreen}      
+      {HelpScreen}
     </div>
   );
 }

@@ -1,5 +1,3 @@
-// TODO: not same color twice
-
 import Events from 'events';
 import { isElement, memoize, throttle } from 'lodash';
 import { randomInt } from 'util/number';
@@ -636,7 +634,7 @@ class Tetris extends BaseVw {
 
     this.clearActivePiece();
 
-    if (this._prevPieceColor) {
+    if (colors.length > 1 && this._prevPieceColor) {
       colors = colors.filter(c => c !== this._prevPieceColor);
     }
 
@@ -683,7 +681,7 @@ class Tetris extends BaseVw {
       ],
     });
     this.setState({ activePiece: newPiece });
-    this.startTick();
+    this.rafTick();
   }
 
   restart() {

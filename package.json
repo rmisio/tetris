@@ -1,5 +1,6 @@
 {
   "name": "tetris",
+  "homepage": "https://tetris.robmisio.com",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -23,8 +24,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "surge": "surge build --domain https://tetris.robmisio.com",
-    "deploy": "npm-run-all build surge"    
+    "netlify": "netlify deploy -p -d build",
+    "deploy": "npm-run-all build netlify"
   },
   "eslintConfig": {
     "extends": "react-app"
